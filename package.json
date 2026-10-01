@@ -1,0 +1,11 @@
+{
+  "name": "mchose-g75",
+  "version": "1.0.0",
+  "description": "Realtime lighting and a neural next-key predictor for the MCHOSE G75 Pro keyboard",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "node-hid": "^3.4.0",
+    "onnxruntime-node": "^1.29.0"
+  }
+}

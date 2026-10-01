@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mchose · Мини-GPT на клавиатуре · оглавление курса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin:26px 0}
+  .card{display:block;text-decoration:none;color:var(--ink);border:1.5px solid var(--ink);border-radius:12px;background:#fff;padding:16px 18px;box-shadow:4px 4px 0 rgba(38,36,29,.08);transition:transform .12s}
+  .card:hover{transform:translate(-1px,-1px)}
+  .card:focus-visible{outline:2px solid var(--led-b);outline-offset:3px}
+  .card .n{font:800 11px var(--mono);letter-spacing:.12em;color:var(--ink-soft);text-transform:uppercase;display:flex;justify-content:space-between}
+  .card h3{font:600 17px var(--body);margin:8px 0 6px}
+  .card p{font-size:14px;color:var(--ink-soft);margin:0}
+  .card.locked{border:1.5px dashed var(--line);box-shadow:none;background:transparent}
+  .card.locked h3{color:var(--ink-soft)}
+  .st{font:600 11px var(--mono);letter-spacing:.06em;padding:2px 7px;border-radius:6px;border:1px solid var(--line);background:var(--hi)}
+  .st.now{border-color:var(--led-r);color:var(--led-r)}
+  .st.again{border-color:var(--led-b);color:var(--led-b)}
+  .st.plan{color:var(--ink-soft)}
+  .ladder{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:14px 0}
+  .ladder div{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 14px;font-size:14px}
+  .ladder b{display:block;font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px}
+  .ladder .best{box-shadow:inset 0 0 0 2px var(--led-g)}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow"><span class="dots"><i></i><i></i><i></i></span> mchose · оглавление курса</div>
+  <h1>Мини-GPT на клавиатуре</h1>
+  <p class="lede">Миссия: живой предиктор следующей буквы на MCHOSE G75 Pro — подсветка топ-3 клавиш, — и полный цикл LLM на собственных руках: pretrain → SFT → RL. Гейт: top-3 accuracy ≥ +3 п.п. к триграммному бейзлайну на личном тексте.</p>
+
+  <div class="win"><span class="t">с чего начать сейчас</span>
+    <p>Внимание не зашло с первого прохода — вернулись к фундаменту. Порядок: <a href="0001-token-to-vector.html">урок 1</a> → <a href="0002-matmul.html">урок 2</a> → <a href="0003-attention-tables.html">урок 3 заново</a>. Останутся силы — <a href="0004-generation-loops.html">урок 4</a>: разбор вчерашнего залипания призрака, он опирается только на урок 3. Урок = одна тема, 5–7 минут; непонятное — вопросом агенту прямо по секциям.</p>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="0001-token-to-vector.html">
+      <span class="n">урок 1 <span class="st now">пройти сейчас</span></span>
+      <h3>Буква → вектор: рождается таблица X</h3>
+      <p>Токен, embedding, позиция. Живые числа нашей mid: «а»·«я» = +0.37 против «а»·«т» = −0.03. Итог — X[17×256], вход внимания.</p>
+    </a>
+    <a class="card" href="0002-matmul.html">
+      <span class="n">урок 2 <span class="st now">затем</span></span>
+      <h3>Умножение матриц — таблица скалярных произведений</h3>
+      <p>Клетка C[i][j] = строка × столбец. Кликабельный A@B, правило форм, транспонирование, и как из него собирается S[17×17].</p>
+    </a>
+    <a class="card" href="0003-attention-tables.html">
+      <span class="n">урок 3 <span class="st again">перечитать</span></span>
+      <h3>Внимание — это таблицы, а не разговор</h3>
+      <p>X → Q,K,V → S → W → newX на живых числах. Плюс настоящие веса обученной mid: ранние головы — соседи, глубокие — границы фразы.</p>
+    </a>
+    <a class="card" href="0004-generation-loops.html">
+      <span class="n">урок 4 <span class="st again">по следам вечера</span></span>
+      <h3>Почему призрак зациклился</h3>
+      <p>Жадный декод, само-копирование внимания (induction heads), температура на ползунке. Живые числа залипания «пошли под» и честная таблица, где подсветка сильная и слабая.</p>
+    </a>
+    <div class="card locked">
+      <span class="n">урок 5 <span class="st plan">план</span></span>
+      <h3>Анатомия слоя</h3>
+      <p>Многоголовость, FFN, residual, нормировки — и зачем проекций три. Читается поверх урока 3.</p>
+    </div>
+    <div class="card locked">
+      <span class="n">урок 6 <span class="st plan">план</span></span>
+      <h3>Обучение: лосс, градиент, шаг</h3>
+      <p>На живых кривых нашей лестницы small/mid/big — что уже обучено и почему big не обогнал mid.</p>
+    </div>
+    <div class="card locked">
+      <span class="n">урок 7 <span class="st plan">план</span></span>
+      <h3>Читаем pretrain.py вслух</h3>
+      <p>Каждый блок файла — построчно, с предсказанием эффекта изменений («а если lr ×10?»).</p>
+    </div>
+    <div class="card locked">
+      <span class="n">дальше <span class="st plan">миссия</span></span>
+      <h3>SFT → RL → свечка</h3>
+      <p>Дообучение на личном тексте, обучение на награду, ONNX-экспорт и подсветка клавиш в реалтайме.</p>
+    </div>
+  </div>
+
+  <div class="win"><span class="t">живой статус · лестница обучена</span>
+    <div class="ladder">
+      <div><b>small · 0.86M</b>val 1.317 · top-3 0.80</div>
+      <div class="best"><b>mid · 3.29M</b>val 1.124 · top-3 0.83</div>
+      <div><b>big · 12.88M</b>val 1.207 · top-3 0.82</div>
+    </div>
+    <p style="font-size:14px;color:var(--ink-soft);margin:6px 0 0">104М токенов train, 2000 шагов, лучший по val — mid. big не обогнал mid — первый вопрос к уроку 5. Чекпоинты: <code>train/ckpt/</code>, кривые: <code>train/logs/*.csv</code>.</p>
+    <p style="font-size:14px;color:var(--ink-soft);margin:6px 0 0"><b>SFT на телеграме (5.3М симв):</b> итерации 2026-09-12 — словарь 401 (личные символы: заглавные RU, эмодзи), претрейн + enwiki, SFT 8000 шагов → top-1 <b>0.901</b> / top-3 <b>0.955</b> против триграммы 0.702/0.916. Гейт «+3 п.п.» взят с запасом: <b>+3.9</b>. Старт цикла был 0.777/0.948. Демо: <code>./demo.sh</code> → <code>?m=sft.onnx</code>.</p>
+  </div>
+
+  <div class="ask"><strong>Запутался — спроси агента.</strong> Он преподаватель этого курса: подберёт пример, перескажет секцию иначе или разберёт твои числа.</div>
+
+  <div class="sources">
+    <p class="t">вокруг курса</p>
+    <p><a href="../MISSION.md">MISSION.md</a> — зачем всё это · <a href="../RESOURCES.md">RESOURCES.md</a> — проверенные источники и сообщества · <a href="../docs/adr/">docs/adr/</a> — решения проекта · <a href="../learning-records/">learning-records/</a> — что уже усвоено.</p>
+  </div>
+</main>
+</body>
+</html>

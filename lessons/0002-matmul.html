@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Урок 2 · Умножение матриц — таблица скалярных произведений</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <div class="eyebrow"><span class="dots"><i></i><i></i><i></i></span> mchose · урок 2 · ~7 минут</div>
+  <h1>Умножение матриц — таблица скалярных произведений</h1>
+  <p class="lede">В трансформере нет ничего, кроме умножений таких таблиц, сложений и softmax. Научишься читать одну клетку результата — и формулы внимания из урока 3 превратятся в простыни чисел, которые ты считал руками.</p>
+
+  <div class="win"><span class="t">что уносишь с урока</span>
+    <p>Считаешь v·w и клетку <code>C[i][j]</code> в <code>A@B</code> · проверяешь формы <code>(m×k)@(k×n)</code> · понимаешь, зачем в <code>Q@Kᵀ</code> транспонирование.</p>
+  </div>
+
+  <h2>1. Скалярное произведение: два вектора → одно число</h2>
+  <p>Это та самая мера, что дала <code>«а»·«я» = +0.37</code> в уроке 1. Два вектора по 3 числа: перемножаем поэлементно, складываем — одно число. Совпали знаки в тех же местах → большое положительное, перепутались → отрицательное:</p>
+  <div class="flow">a = [0.9, 0.1, 0.3]    b = [0.8, 0.2, 0.5]
+a·b = 0.9·0.8 + 0.1·0.2 + 0.3·0.5 = 0.89   ← совпали</div>
+  <div class="dot-play">
+    <div class="vecs">
+      <div class="v"><label>вектор a</label>
+        <input type="range" min="-10" max="10" value="9" aria-label="a1">
+        <input type="range" min="-10" max="10" value="1" aria-label="a2">
+        <input type="range" min="-10" max="10" value="3" aria-label="a3">
+      </div>
+      <div class="v"><label>вектор b</label>
+        <input type="range" min="-10" max="10" value="8" aria-label="b1">
+        <input type="range" min="-10" max="10" value="2" aria-label="b2">
+        <input type="range" min="-10" max="10" value="5" aria-label="b3">
+      </div>
+    </div>
+    <p class="res">a·b = <span class="dot-out">0.89</span><small>Подвигай ползунки: одинаковые знаки в одинаковых местах тянут вверх, разные — вниз. Каждая клетка внимания считается этой же мерой.</small></p>
+  </div>
+
+  <h2>2. Вектор × матрица: по одному произведению на столбец</h2>
+  <p>Возьмём букву «к» из урока 1 — её вектор из 3 чисел (в бою 256) — и матрицу <code>W[3×2]</code>. Умножение <code>x @ W</code> даёт <strong>два</strong> числа, и каждое — скалярное произведение x со столбцом W:</p>
+  <div class="flow">x  = [0.9, 0.1, 0.3]           ← буква «к»
+w₁ = [0.8, 0.1, 0.3]  (столбец 1)      x·w₁ = 0.72 + 0.01 + 0.09 = 0.82
+w₂ = [−0.2, 0.5, 0.6] (столбец 2)      x·w₂ = −0.18 + 0.05 + 0.18 = 0.05
+
+x @ W = [0.82, 0.05]   ← новое описание «к» в двух числах</div>
+  <p>Столбец — это <strong>рецепт взвешивания</strong>: «умножь первую координату на 0.8, вторую на 0.1, третью на 0.3 и сложи». На языке кода: <code>result = W.T.map(col =&gt; dot(x, col))</code>. Если W обучаемая, модель сама выучивает рецепты, которые ей полезны.</p>
+
+  <h2>3. Матрица × матрица: та же операция, строка за строкой</h2>
+  <p>Теперь слева не одна буква, а три — «к», «а», «к». Каждая строка результата считается как в §2, независимо от соседних. <strong>Клетка C[i][j] = скалярное произведение строки i матрицы A и столбца j матрицы B.</strong> Тыкай в клетки результата — подсветится, что именно перемножилось:</p>
+  <div class="matmul">
+    <div class="stage">
+      <table class="mm-a">
+        <thead><tr><th>X</th><th>1</th><th>2</th><th>3</th></tr></thead>
+        <tbody>
+          <tr><th>к</th><td data-v="0.9">0.9</td><td data-v="0.1">0.1</td><td data-v="0.3">0.3</td></tr>
+          <tr><th>а</th><td data-v="0.2">0.2</td><td data-v="-0.4">−0.4</td><td data-v="0.5">0.5</td></tr>
+          <tr><th>к</th><td data-v="-0.6">−0.6</td><td data-v="0.7">0.7</td><td data-v="0.1">0.1</td></tr>
+        </tbody>
+      </table>
+      <span class="op">@</span>
+      <table class="mm-b">
+        <thead><tr><th>W</th><th>w₁</th><th>w₂</th></tr></thead>
+        <tbody>
+          <tr><th>1</th><td data-v="0.8">0.8</td><td data-v="-0.2">−0.2</td></tr>
+          <tr><th>2</th><td data-v="0.1">0.1</td><td data-v="0.5">0.5</td></tr>
+          <tr><th>3</th><td data-v="0.3">0.3</td><td data-v="0.6">0.6</td></tr>
+        </tbody>
+      </table>
+      <span class="op">=</span>
+      <table class="mm-c">
+        <thead><tr><th>C</th><th>w₁</th><th>w₂</th></tr></thead>
+        <tbody>
+          <tr><th>к</th><td></td><td></td></tr>
+          <tr><th>а</th><td></td><td></td></tr>
+          <tr><th>к</th><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mm-shape"></p>
+    <div class="mm-work"></div>
+  </div>
+  <p>Правило форм — как контракт типов: <code>(m×k) @ (k×n) → (m×n)</code>, внутренние размеры обязаны совпасть, иначе ошибка размерности (попробуй скормить PyTorch <code>(3×3) @ (2×3)</code> — откажется). Верхний индекс ᵀ — транспонирование: строки становятся столбцами. Оно нужно, когда перемножать надо <em>строку со строкой</em>: <code>Q@Kᵀ</code> — это строки Q против строк K, просто K лежит на боку.</p>
+
+  <h2>4. Зачем это трансформеру</h2>
+  <p>Всё внимание из урока 3 — четыре строчки таких умножений на нашей строке «Привет, как дела?» (17 букв, d=256):</p>
+  <div class="flow">Q = X @ Wq      17×256 @ 256×256 → 17×256   «что ищу»
+K = X @ Wk      17×256 @ 256×256 → 17×256   «кем являюсь»
+V = X @ Wv      17×256 @ 256×256 → 17×256   «что отдам»
+S = Q @ Kᵀ      17×256 @ 256×17  → 17×17    все 289 пар букв разом</div>
+  <p>Заметь: <code>S[17×17]</code> — таблица «каждая буква × каждая буква», посчитанная <strong>одним</strong> умножением, без единого цикла. Никакого процесса «кто у кого спрашивает» — GPU просто перемножает таблицы. Wq, Wk, Wv — обучаемые таблицы 256×256; какие «рецепты» в них выучатся, таким и будет внимание. Как читать клетки S — <a href="0003-attention-tables.html">урок 3</a>.</p>
+
+  <h2>Проверь себя</h2>
+  <div class="quiz" data-correct="2" data-why="Одно число: произведения координат складываются. Это мера «совпали» из урока 1.">
+    <p class="q">v·w для двух векторов из 3 чисел — это…</p>
+    <button class="a">вектор из трёх новых чисел</button>
+    <button class="a">таблица из девяти чисел</button>
+    <button class="a">одно число: сумма поэлементных произведений</button>
+    <button class="a">число, равное длине большего вектора</button>
+  </div>
+  <div class="quiz" data-correct="0" data-why="Строка левой матрицы, столбец правой — единственное правило клетки. Запомни его, и любое умножение читается.">
+    <p class="q">Откуда берётся клетка C[2][1] в A@B?</p>
+    <button class="a">произведение строки 2 из A и столбца 1 из B</button>
+    <button class="a">произведение столбца 2 из A и строки 1 из B</button>
+    <button class="a">клетка 2×1, усреднённая из A и B</button>
+    <button class="a">копия клетки C[1][2], умноженная на два</button>
+  </div>
+  <div class="quiz" data-correct="3" data-why="Внешние размеры становятся размерами результата, внутренние «схлопываются» — они обязаны совпасть.">
+    <p class="q">(17×256) @ (256×256) — каков результат?</p>
+    <button class="a">256×256: внутренние размеры победили</button>
+    <button class="a">17×17: внешние числа перемножились</button>
+    <button class="a">512×512: размеры сложились покоординатно</button>
+    <button class="a">17×256: внешние размеры, внутренние сократились</button>
+  </div>
+  <div class="quiz" data-correct="1" data-why="Правило клетки — строка × столбец. Пары букв — это строки Q и строки K, поэтому K кладут на бок.">
+    <p class="q">Зачем в S = Q@Kᵀ матрицу K переворачивают?</p>
+    <button class="a">перевёрнутая матрица быстрее считается на GPU</button>
+    <button class="a">нужны столбцы из строк K для скалярных произведений</button>
+    <button class="a">без переворота строка S не суммируется в единицу</button>
+    <button class="a">так требует формат данных в библиотеке PyTorch</button>
+  </div>
+
+  <div class="ask"><strong>Запутался — спроси агента.</strong> Он твой преподаватель: «урок 2, не понял, почему C[2][1] берёт столбец» — и он соберёт тебе пример на других числах.</div>
+
+  <div class="sources">
+    <p class="t">главный источник к уроку</p>
+    <p><a href="https://www.youtube.com/watch?v=kCc8FmEb1nY">Karpathy · «Let's build GPT: from scratch, in code»</a> — те же умножения в живом коде, тем же путём, что идём мы. Смотри фрагмент про <code>@</code> после урока.</p>
+    <p class="t">опционально</p>
+    <p><a href="https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab">3Blue1Brown · «Essence of Linear Algebra»</a>, глава 3 — геометрия матриц (повороты и растяжения). Не обязательна: нам хватает арифметики.</p>
+    <p class="t">навигация</p>
+    <p><a href="index.html">← оглавление курса</a> · <a href="0001-token-to-vector.html">← урок 1: буква → вектор</a> · <a href="0003-attention-tables.html">урок 3: внимание →</a></p>
+  </div>
+</main>
+<script src="../assets/quiz.js"></script>
+<script src="../assets/dot-play.js"></script>
+<script src="../assets/matmul.js"></script>
+</body>
+</html>

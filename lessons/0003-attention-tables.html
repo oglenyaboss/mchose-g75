@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Урок 3 · Внимание — это таблицы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <div class="eyebrow"><span class="dots"><i></i><i></i><i></i></span> mchose · урок 3 · ~6 минут</div>
+  <h1>Внимание — это таблицы, а не разговор</h1>
+  <p class="lede">Никто ни у кого ничего не спрашивает. Есть матричные умножения, и «буква «к» интересуется пробелом» — это просто клетка в таблице. Сегодня научишься читать и считать эти клетки руками.</p>
+
+  <div class="win"><span class="t">что уносишь с урока</span>
+    <p>Читаешь таблицу <code>S = Q·Kᵀ</code> по клеткам · прогоняешь строку через softmax · видел настоящие обученные веса своей модели.</p>
+  </div>
+
+  <h2>1. Вход: таблица X, три проекции</h2>
+  <p>Строка «как » → после embedding и позиций (<a href="0001-token-to-vector.html">урок 1</a>) — таблица <code>X[4×8]</code>: строка = буква, 8 чисел (в бою — X[17×256]; здесь 4×8, чтобы всё посчитать руками). Единственная математика на вперёд: клетка любого умножения — скалярное произведение строки левой таблицы и столбца правой; большое положительное = «совпали» (<a href="0002-matmul.html">урок 2</a>). Дальше три умножения на три <em>обучаемые</em> таблицы (сейчас случайные — модель не обучена):</p>
+  <div class="flow">Q = X @ Wq    «запросы» — строка i: чем буква i интересуется
+K = X @ Wk    «ярлыки»  — строка j: чем буква j объявляет себя
+V = X @ Wv    «выдачи»  — строка j: что буква j отдаст другим</div>
+  <p>Зачем три, а не одна: «что ищу», «кто я» и «что отдам» — конфликтующие описания одной буквы. Одна таблица не сможет быть всеми тремя сразу — подробности в следующем уроке.</p>
+
+  <h2>2. S — «все спросили у всех» одним умножением</h2>
+  <p>Умножаем запросы на ярлыки: <code>S = Q·Kᵀ / √8</code>. Получается квадратная таблица — клетка (i, j) = скалярное произведение строки Q[i] и строки K[j]. Прогон на живых числах:</p>
+  <table class="mtx">
+    <thead><tr><th>S</th><th>к</th><th>а</th><th>к</th><th>␣</th></tr></thead>
+    <tbody>
+      <tr><th>к</th><td class="num">−0.6</td><td class="num">−1.0</td><td class="num">6.3</td><td class="num">7.9</td></tr>
+      <tr><th>а</th><td class="num">1.0</td><td class="num">1.2</td><td class="num">9.6</td><td class="num">4.5</td></tr>
+      <tr><th>к</th><td class="num">−3.0</td><td class="num">−3.0</td><td class="num">4.8</td><td class="num">12.9</td></tr>
+      <tr><th>␣</th><td class="num">2.4</td><td class="num">−0.5</td><td class="num">8.8</td><td class="num">3.4</td></tr>
+    </tbody>
+  </table>
+  <p>Читай: строка — кто, столбец — у кого. <code>S[к][␣] = 7.9</code> — запрос второй «к» сильно совпал с ярлыком пробела. Никакого процесса — число в клетке, посчитанное за одно матричное умножение для всех пар сразу.</p>
+
+  <h2>3. W — доли (softmax по строке)</h2>
+  <p>Экспоненцируем строку и нормируем в сумму 1 — получаем готовые доли «сколько взять»:</p>
+  <table class="mtx">
+    <thead><tr><th>W</th><th>к</th><th>а</th><th>к</th><th>␣</th></tr></thead>
+    <tbody>
+      <tr><th>к</th><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.16</td><td class="num hot">0.84</td></tr>
+      <tr><th>а</th><td class="num">0.00</td><td class="num">0.00</td><td class="num hot">0.99</td><td class="num">0.01</td></tr>
+      <tr><th>к</th><td class="num">0.00</td><td class="num">0.00</td><td class="num">0.00</td><td class="num hot">1.00</td></tr>
+      <tr><th>␣</th><td class="num">0.00</td><td class="num">0.00</td><td class="num hot">0.99</td><td class="num">0.00</td></tr>
+    </tbody>
+  </table>
+  <p>Каждая строка в сумме ровно <code>1.000</code>. Заметь: веса перекошены до предела (0.99) — потому что таблицы случайные, scores огромные (12.9). Настоящее обучение + деление на <code>√8</code> делают доли осмысленными и ровнее.</p>
+
+  <h2>4. newX — смесь выдач</h2>
+  <p>Последний шаг: <code>newX = W @ V</code>. Строка результата = строки V, смешанные по долям строки W:</p>
+  <div class="flow">новая_к = 0.84·V(␣) + 0.16·V(к) + 0.00·V(а) + 0.00·V(к₂)</div>
+  <p>Это и есть «выход внимания» для буквы «к». В полном слое к нему прибавляется исходная строка (residual: «уточняй, не теряя») и результат идёт в следующий слой.</p>
+
+  <h2>5. Настоящие веса — из нашей обученной mid</h2>
+  <p>Выше доли дикие (0.99), потому что таблицы случайные. А вот та же W после обучения — наша mid (3.29M параметров, val loss 1.124), буква «а» в «дел<strong>а</strong>?», строка «сколько взять у кого»:
+  <table class="mtx">
+    <thead><tr><th>голова</th><th>сильнейшие адресаты</th><th>чтение</th></tr></thead>
+    <tbody>
+      <tr><th>слой 1 · гол. 3</th><td class="num">л 0.72 · е 0.15</td><td>соседи внутри слова</td></tr>
+      <tr><th>слой 3 · гол. 4</th><td class="num">␣ 0.67 · ␣ 0.12 · , 0.10</td><td>границы слов и фразы</td></tr>
+    </tbody>
+  </table>
+  <p>Ранние головы цепляются за соседние буквы, глубокие — за структуру фразы. Никто им этого не программировал: рецепты Wq и Wk выучились сами, потому что так полезнее предсказывать следующую букву. Полный дамп всех 16 голов лежит в <code>assets/attn-mid.json</code>.</p>
+
+  <div class="win"><span class="t">где всё находится · когда происходит</span>
+    <p><code>X[4×8] → Q,K,V[4×8] → S[4×4] → W[4×4] → newX[4×8]</code> — пять тензоров в памяти. Выполняется один раз на слой, весь текст одновременно, без циклов по буквам: три матричных умножения, которые GPU съедает целиком.</p>
+  </div>
+
+  <h2>Проверь себя</h2>
+  <div class="quiz" data-correct="1" data-why="Softmax нормирует каждую строку в сумму ровно 1 — это доли «сколько взять у каждого».">
+    <p class="q">Чему равна сумма любой строки W?</p>
+    <button class="a">нулю</button>
+    <button class="a">единице</button>
+    <button class="a">четырём</button>
+    <button class="a">восьми</button>
+  </div>
+  <div class="quiz" data-correct="0" data-why="Клетка S[i][j] — скалярное произведение запроса Q[i] и ярлыка K[j]. Доля — это уже W, после softmax.">
+    <p class="q">Клетка S[к][␣] = 7.9 — что это число?</p>
+    <button class="a">насколько совпали запрос «к» и ярлык «␣»</button>
+    <button class="a">сколько чисел в векторе буквы «к»</button>
+    <button class="a">позиция буквы «к» внутри строки текста</button>
+    <button class="a">какая доля внимания «к» досталась «␣»</button>
+  </div>
+  <div class="quiz" data-correct="2" data-why="e в степени минус бесконечность = 0, а сумма строки не меняется — будущие соседи получают ровно ноль внимания.">
+    <p class="q">Будущей букве дали score = −∞. Её вес после softmax?</p>
+    <button class="a">минус бесконечность останется</button>
+    <button class="a">ровно половина строки</button>
+    <button class="a">ровно ноль навсегда</button>
+    <button class="a">строка перестанет суммироваться</button>
+  </div>
+  <div class="quiz" data-correct="3" data-why="Проекции через три разные таблицы: «что ищу», «кем являюсь», «что отдам» — конфликтующие описания, одна таблица все роли не потянет.">
+    <p class="q">Почему Q, K, V — три таблицы, а не одна?</p>
+    <button class="a">в сети ровно три слоя трансформера</button>
+    <button class="a">в слове «как» ровно три буквы</button>
+    <button class="a">обучение идёт ровно три эпохи</button>
+    <button class="a">это три роли одной буквы одновременно</button>
+  </div>
+
+  <div class="ask"><strong>Запутался — спроси агента.</strong> Он твой преподаватель: «не понял шаг 3, откуда 7.9» — и он разберёт на других числах.</div>
+
+  <div class="sources">
+    <p class="t">главный источник к уроку</p>
+    <p><a href="https://www.youtube.com/watch?v=eMlx5fFNoYc">3Blue1Brown · «Attention in transformers, explained visually»</a> — та же механика в анимации; смотри после урока, картинка сложится поверх таблиц.</p>
+    <p class="t">следующий урок</p>
+    <p><a href="index.html">← оглавление курса</a> · <a href="0002-matmul.html">← урок 2: умножение матриц</a> · дальше по плану: урок 4 — генерация и петли (по следам призрака), урок 5 — анатомия слоя.</p>
+  </div>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

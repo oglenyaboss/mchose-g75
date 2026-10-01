@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mchose G75 Pro · свечка на клавиатуре</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/course.css">
+<style>
+  main.wide{max-width:1180px}
+  h1{margin-bottom:10px}
+  .lede{margin-bottom:20px}
+
+  /* --- сцена: тёмный стол, доска объёмная, можно крутить мышью --- */
+  .stage{position:relative;border-radius:22px;overflow:hidden;cursor:grab;
+    background:radial-gradient(120% 100% at 50% -10%,#2b2733 0%,#15141a 58%,#0b0a0e 100%);
+    box-shadow:inset 0 0 90px rgba(0,0,0,.75),0 30px 70px -26px rgba(20,18,25,.65)}
+  .stage:active{cursor:grabbing}
+  .stage canvas{display:block;width:100%;height:min(62vh,560px)}
+  .hint{position:absolute;left:18px;bottom:14px;font:600 11px var(--mono);letter-spacing:.1em;
+    text-transform:uppercase;color:rgba(255,255,255,.34);pointer-events:none}
+  .load{position:absolute;inset:0;display:grid;place-items:center;font:600 13px var(--mono);
+    letter-spacing:.08em;color:rgba(255,255,255,.6);background:rgba(10,9,13,.6)}
+  .load.gone{display:none}
+
+  .palette{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:18px}
+  .palette .lbl{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-right:4px}
+  .palette button{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--ink);cursor:pointer;padding:0;
+    background-color:var(--paper);background-size:cover;background-position:center}
+  .palette button.on{outline:2px solid var(--ink);outline-offset:2px}
+  .palette button:focus-visible{outline:2px solid var(--led-b);outline-offset:2px}
+
+  /* --- панель: кандидаты, сессия, лог --- */
+  .panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:22px}
+  .card{border:1.5px solid var(--ink);border-radius:14px;background:#fff;box-shadow:5px 5px 0 rgba(38,36,29,.08);padding:14px 16px}
+  .card .t{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .cands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .cand-chip{border:2px solid var(--line);border-radius:10px;padding:8px 6px 6px;text-align:center;background:var(--paper)}
+  .cand-chip .ch{font:600 26px var(--mono);display:block;line-height:1.1}
+  .cand-chip .p{font:600 11px var(--mono);color:var(--ink-soft)}
+  .cand-chip .r{font:600 10px var(--mono);letter-spacing:.08em;color:var(--ink-soft);display:block;margin-top:2px}
+  .ctx{font:400 13.5px/1.5 var(--mono);margin-top:10px;word-break:break-all;max-height:62px;overflow:hidden;color:var(--ink)}
+  .ctx b{font-weight:600}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin-top:10px;font:600 12.5px var(--mono)}
+  .stats span{color:var(--ink-soft);font-weight:400}
+  .feed{list-style:none;margin:10px 0 0;padding:0;font:400 12.5px/1.45 var(--mono)}
+  .feed li{padding:3px 0;border-top:1px dashed var(--line);display:flex;gap:6px;align-items:baseline}
+  .feed li:first-child{border-top:none}
+  .feed .tail{color:var(--ink-soft);flex:1;overflow:hidden;white-space:nowrap}
+  .feed .mark{font-weight:600}
+  .feed .hit1{color:var(--ok)}.feed .hit3{color:#B07A1E}.feed .miss{color:var(--bad)}
+  .feed .ch{font-weight:600}
+  #net{font:600 12px var(--mono);letter-spacing:.05em}
+  #net.on{color:var(--ok)}#net.off{color:var(--bad)}
+  .credit{font:400 11.5px/1.5 var(--mono);color:var(--ink-soft);margin-top:14px}
+</style>
+</head>
+<body>
+<main class="wide">
+  <div class="eyebrow"><span class="dots"><i></i><i></i><i></i></span> mchose G75 Pro · зеркало подсветки</div>
+  <h1>Свечка: модель подсказывает следующую букву</h1>
+  <p class="lede">Доска настоящая: раскладка, ширины и слоты подсветки взяты из родной модели драйвера MCHOSE, кэпы — объёмные, с профилем по ряду. Цвет каждой клавиши снят с фотографии твоей расцветки, легенды нарисованы свои — читаются на любом зуме. Нажатая клавиша утапливается и отпружинивает. Подсветка — кадр канала 0x08, байт в байт как в железо: что горит на столе, то и на экране. Крутится мышью, клик по клавише — нажимает.</p>
+  <section class="stage" id="stage">
+    <div class="load" id="load">собираю доску…</div>
+    <span class="hint" id="hint">собираю…</span>
+  </section>
+
+  <div class="palette" id="palette"><span class="lbl">расцветка</span></div>
+
+  <section class="panel">
+    <div class="card">
+      <span class="t" id="cands-title">ставки модели на следующую букву</span>
+      <div class="cands" id="cands"></div>
+      <div class="ctx" id="ctx">жду нажатий…</div>
+    </div>
+    <div class="card">
+      <span class="t">сессия</span>
+      <div class="stats" id="stats"></div>
+      <div id="net" style="margin-top:12px">подключаюсь…</div>
+    </div>
+    <div class="card">
+      <span class="t">лог · попадания в топ-3</span>
+      <ol class="feed" id="feed"></ol>
+    </div>
+  </section>
+  <p class="credit">Кэпы: «Mechanical Keyboard» by Flexryhe (sketchfab.com/Flexryhe), лицензия Sketchfab Standard. Раскладка и подсветка: модель и драйвер MCHOSE G75.</p>
+</main>
+
+<script type="importmap">
+{ "imports": { "three": "./assets/3d/vendor/three.module.min.js", "three/addons/": "./assets/3d/vendor/addons/" } }
+</script>
+<script>
+// ошибки — прямо на страницу: страницу снимаю скриншотом, консоль не видно
+addEventListener('error', e => {
+  const l = document.getElementById('load');
+  if (!l) return;
+  l.classList.remove('gone');
+  l.style.color = '#ff8a8a';
+  l.textContent = 'ОШИБКА: ' + (e.message || e.error || 'сбой загрузки') + ' @ ' + (e.filename || '').split('/').pop() + ':' + (e.lineno || '');
+});
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './assets/3d/vendor/GLTFLoader.js';
+import { MeshoptDecoder } from './assets/3d/vendor/meshopt_decoder.module.js';
+import { OrbitControls } from './assets/3d/vendor/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const U = 19.05;                       // миллиметров в 1u (стандарт MX)
+const PHOTO_W = 1068, PHOTO_H = 466;   // фотографии драйвера — все в одном кадре
+const st = document.getElementById('stage');
+const loadEl = document.getElementById('load');
+const hint = document.getElementById('hint');
+
+// ---------- сцена ----------
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1, 10, 6000);
+camera.position.set(-120, 310, 345);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;   // цвета кадра — как в железе, без перекодировок
+st.prepend(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.minDistance = 180; controls.maxDistance = 900;
+controls.minPolarAngle = 0.05; controls.maxPolarAngle = 1.25;
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.enablePan = false;
+
+// без блума: свечение делаем в шейдере — изнутри кэпа и через легенду
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+// ---------- шейдер: фотография на геометрии + подсветка клавиши ----------
+// Кэп (mode 1): верх разворачивается в СВОЙ прямоугольник на фото (легенды напечатаны в углу
+// прямоугольника — мировая проекция их теряла), боковина берёт центр прямоугольника.
+// Корпус (mode 0): прямая проекция мировых координат (мм) в кадр фотографии.
+const vert = `
+  varying vec3 vW; varying vec3 vN; varying vec2 vT;
+  void main(){
+    vT = uv;                              // uv запечён в геометрию: верх — нижняя полоса канваса, юбка — верхняя
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vW = wp.xyz; vN = normalize(mat3(modelMatrix) * normal);
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }`;
+const frag = `
+  uniform sampler2D photo; uniform sampler2D aoMap; uniform sampler2D glowMap;
+  uniform vec2 deckMM; uniform vec3 frameColor;
+  uniform vec3 led; uniform float k; uniform vec3 light; uniform float mode;
+  varying vec3 vW; varying vec3 vN; varying vec2 vT;
+  void main(){
+    vec3 n = normalize(vN);
+    float face = smoothstep(0.15, 0.75, n.y);            // 0 — боковина, 1 — верх
+    // AO: запечённая тень колодцев на рамку (r-канал: 1 — чисто, 0 — тень); кэпам не нужен
+    float ao = texture2D(aoMap, vec2(vW.x / deckMM.x + 0.5, vW.z / deckMM.y + 0.5)).r;
+    vec4 texel = texture2D(photo, vT);
+    vec3 base = mix(frameColor * (0.38 + 0.62 * ao), texel.rgb, mode);
+    float diff = max(dot(n, normalize(light)), 0.0);
+    vec3 V = normalize(cameraPosition - vW);
+    float spec = pow(max(dot(reflect(-normalize(light), n), V), 0.0), 26.0) * (0.04 + 0.12 * face);
+    // студийный отлив без env-map: «софтбокс» по высоте отражённого луча + фреснель
+    vec3 R = reflect(-V, n);
+    float horizon = smoothstep(0.30, 0.46, R.y) * (1.0 - smoothstep(0.55, 0.85, R.y));
+    float fres = 0.04 + 0.96 * pow(1.0 - max(dot(n, V), 0.0), 5.0);
+    vec3 env = vec3(0.42, 0.47, 0.55) * horizon * fres * (0.55 + 0.45 * face);
+    vec3 shaded = mix(base * 0.62, base, face) * (0.52 + 0.50 * diff) + spec + env * 0.6;
+    // свет изнутри полупрозрачного кэпа: верх мягко дышит цветом, юбки у дна темнее,
+    // легенда — прозрачное окно, через неё светит ярче всего
+    float g = clamp(k, 0.0, 1.3);
+    float glow = texture2D(glowMap, vT).g;
+    float inner = (0.30 + 0.70 * face) * smoothstep(1.05, 0.45, vT.y);   // юбка плавно темнее к низу
+    vec3 lit = led * g * (inner * 0.42 + glow * 1.25);
+    gl_FragColor = vec4(shaded * (1.0 - 0.45 * min(g, 1.0)) + lit, 1.0);
+  }`;
+function keyMaterial(photo, mode = 0) {
+  return new THREE.ShaderMaterial({
+    vertexShader: vert, fragmentShader: frag,
+    uniforms: {
+      photo: { value: photo },
+      glowMap: { value: blackTex() },
+      aoMap: { value: null },                       // заполняется в init после сборки раскладки
+      deckMM: { value: new THREE.Vector2(1, 1) },
+      mode: { value: mode },
+      frameColor: { value: new THREE.Color(0.82, 0.81, 0.78) },   // рамка; перезаписывается цветом фото в setColor
+      led: { value: new THREE.Color(0, 0, 0) },
+      k: { value: 0 },
+      light: { value: new THREE.Vector3(-0.35, 0.9, 0.4).normalize() },
+    },
+  });
+}
+
+// ---------- материалы и текстуры ----------
+const photo = new THREE.Texture();
+photo.colorSpace = THREE.NoColorSpace;
+const COLORS = [
+  ['iceBlue', 'лёд'], ['pureBlue', 'синий'], ['bluenessWhite', 'бело-синий'], ['northSnow', 'северный снег'],
+  ['whiteLine', 'белая линия'], ['stoneBlack', 'камень'], ['blackLine', 'чёрная линия'],
+  ['redFog', 'красный туман'], ['forestGreen', 'лес'], ['darkPurple', 'фиолет'], ['darkPink', 'розовый'],
+];
+
+const deckMats = [];                        // материалы корпуса — им меняем цвет рамки при смене расцветки
+const FRAME_PX = [0, 0, 0.024 * PHOTO_W, 0.055 * PHOTO_H];   // угол фото: чистая рамка без клавиш
+
+function buildAO() {                          // тень кэпов на рамку: рисуем колодцы с размытием в канвас
+  const dw = board.deck.w * U, dd = board.deck.d * U;
+  const W = 1024, H = Math.round(W * dd / dw);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+  const px = W / dw, py = H / dd;
+  x.fillStyle = 'rgba(0,0,0,0.5)';
+  for (const blur of [3, 10]) {                 // два прохода: плотная тень у борта + широкий спад
+    x.filter = `blur(${blur}px)`;
+    for (const k of keys) {
+      const hw = (k.w + 0.13) * U / 2, hd = 1.06 * U / 2;
+      x.fillRect((k.u * U + dw / 2) * px - hw * px, (0.5 + k.v * U / dd) * H - hd * py, hw * 2 * px, hd * 2 * py);
+    }
+  }
+  x.filter = 'none';
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+}
+function glowTexture() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,255,255,0.95)');
+  g.addColorStop(0.25, 'rgba(255,255,255,0.35)');
+  g.addColorStop(0.6, 'rgba(255,255,255,0.08)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.NoColorSpace; return t;
+}
+function blackTex() {                        // заглушка glow-маски: чёрная — не светит
+  const c = document.createElement('canvas'); c.width = c.height = 2;
+  const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, 2, 2);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.NoColorSpace; return t;
+}
+
+const glowTex = glowTexture();   // radial-градиент: тень под доской
+
+
+// ---------- сборка доски ----------
+let keys = [];            // [{slot,name,u,v,w,cap,capScale, rect, mesh, mat}]
+let deckGroup, board = {};
+
+function roundedRect(shape, x, y, w, h, r) {
+  shape.moveTo(x + r, y);
+  shape.lineTo(x + w - r, y); shape.quadraticCurveTo(x + w, y, x + w, y + r);
+  shape.lineTo(x + w, y + h - r); shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  shape.lineTo(x + r, y + h); shape.quadraticCurveTo(x, y + h, x, y + h - r);
+  shape.lineTo(x, y + r); shape.quadraticCurveTo(x, y, x + r, y);
+}
+
+function buildDeck() {
+  const w = board.deck.w * U, d = board.deck.d * U, r = board.deck.r * U;
+  const shape = new THREE.Shape();
+  roundedRect(shape, -w / 2, -d / 2, w, d, r);
+  for (const k of keys) {                       // колодец под каждую клавишу
+    const hw = (k.w + 0.025) * U / 2, hd = 0.94 * U / 2;
+    const hole = new THREE.Path();
+    roundedRect(hole, k.u * U - hw, -k.v * U - hd, hw * 2, hd * 2, 1.6);
+    shape.holes.push(hole);
+  }
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: 13, bevelEnabled: true, bevelThickness: 0.6, bevelSize: 0.6, bevelSegments: 2, curveSegments: 14,
+  });
+  geo.rotateX(Math.PI / 2);                     // корпус уходит вниз от плоскости стола
+  const mat = keyMaterial(photo, 0);
+  deckMats.push(mat);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0;                          // верх корпуса — нулевая высота
+  return mesh;
+}
+
+// three.js чистит имена узлов (убирает точки и пробелы) — ищем и по «сырому», и по чищеному имени
+const sane = n => n.replace(/\s/g, '_').replace(/[\[\]\.:\/]/g, '');
+
+// ---------- легенды и цвет кэпов: канвас-текстура на клавишу ----------
+// Цвет тела — усреднение по верхней грани клавиши на фото драйвера (фото — псевдо-3D рендеры,
+// легенды там ~8px и в проекцию не выживают, поэтому рисуем свои).
+const LEGENDS = {
+  Backspace: '⌫', Tab: 'Tab', Caps: 'Caps', Enter: 'Enter',
+  Left_Shift: 'Shift', Right_Shift: 'Shift', Left_Ctrl: 'Ctrl', Right_Ctrl: 'Ctrl',
+  Left_Win: 'Win', Left_Alt: 'Alt', Fn: 'Fn', Insert: 'Ins', Delete: 'Del',
+  Home: 'Home', PgUp: 'PgUp', PgDn: 'PgDn', End: 'End',
+  up: '↑', down: '↓', left: '←', right: '→',
+  one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', zero: '0',
+  backquote: '`', backslash: '\\', comma: ',', dot: '.', equal: '=', transverse: '-',
+  left_bracket: '[', right_bracket: ']', semicolon: ';', singlequotes: "'", slash: '/', Space: '',
+};
+const legendOf = k => LEGENDS[k.name] ?? (k.name.length === 1 ? k.name.toUpperCase() : k.name);
+
+const bodyColor = (() => {                          // средний цвет верхней грани кэпа с фото
+  const cv = document.createElement('canvas');
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  return (img, r) => {                              // r — rect клавиши в пикселях фото
+    const rw = r[2] - r[0], rh = r[3] - r[1];
+    const sx = Math.max(2, Math.round(rw * 0.4)), sy = Math.max(2, Math.round(rh * 0.35));
+    cv.width = sx; cv.height = sy;
+    ctx.drawImage(img, r[0] + rw * 0.3, r[1] + rh * 0.12, rw * 0.4, rh * 0.35, 0, 0, sx, sy);
+    const d = ctx.getImageData(0, 0, sx, sy).data;
+    let R = 0, G = 0, B = 0; const n = d.length / 4;
+    for (let i = 0; i < d.length; i += 4) { R += d[i]; G += d[i + 1]; B += d[i + 2]; }
+    return [R / n / 255, G / n / 255, B / n / 255];
+  };
+})();
+// uv кэпа запекается в геометрию в МИРОВЫХ координатах: верхняя грань — нижняя полоса канваса,
+// юбка — верхняя. Локальные оси аулы не годятся: модель лежала на боку (высота кэпа — вдоль локального z).
+function bakeUV(geo, M) {
+  const p = geo.attributes.position, n = geo.attributes.normal, cnt = p.count;
+  const v3 = new THREE.Vector3(), n3 = new THREE.Vector3();
+  const pts = [], nrm = [];
+  for (let i = 0; i < cnt; i++) {
+    v3.fromBufferAttribute(p, i).applyMatrix4(M); pts.push(v3.x, v3.y, v3.z);
+    n3.fromBufferAttribute(n, i).transformDirection(M); nrm.push(n3.x, n3.y, n3.z);
+  }
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9, minZ = 1e9, maxZ = -1e9;
+  for (let i = 0; i < cnt; i++) {
+    minX = Math.min(minX, pts[i * 3]); maxX = Math.max(maxX, pts[i * 3]);
+    minY = Math.min(minY, pts[i * 3 + 1]); maxY = Math.max(maxY, pts[i * 3 + 1]);
+    minZ = Math.min(minZ, pts[i * 3 + 2]); maxZ = Math.max(maxZ, pts[i * 3 + 2]);
+  }
+  const wX = maxX - minX, hY = maxY - minY, dZ = maxZ - minZ;
+  const uv = new Float32Array(cnt * 2);
+  for (let i = 0; i < cnt; i++) {
+    const px = pts[i * 3], py = pts[i * 3 + 1], pz = pts[i * 3 + 2], ny = nrm[i * 3 + 1];
+    let u, v;
+    if (ny > 0.92) {                              // верхняя грань: нижняя полоса канваса
+      u = (px - minX) / wX;
+      v = 0.5 - 0.45 * (pz - minZ) / dZ;          // передний край — 0.05
+    } else {                                      // юбка: верхняя полоса
+      u = Math.abs(nrm[i * 3 + 2]) >= Math.abs(nrm[i * 3]) ? (px - minX) / wX : (pz - minZ) / dZ;
+      v = 0.95 - 0.40 * (maxY - py) / hY;         // верх юбки — 0.55, низ — 0.95
+    }
+    uv[i * 2] = u; uv[i * 2 + 1] = v;
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+}
+
+
+
+function capTexture(k, body, legend) {              // { map, glow }: цвет тела + мелкая легенда + маска легенды
+  const px = 110;
+  const w = Math.max(8, Math.round(px * (k.w + 0.08))), h = px * 2;   // две полосы: верх канваса — юбка, низ — верхняя грань
+  const draw = (bg, fg) => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    x.fillStyle = bg; x.fillRect(0, 0, w, h);
+    const txt = legendOf(k);
+    if (txt) {
+      x.fillStyle = fg;
+      x.font = `500 ${Math.round(px * 0.19)}px "JetBrains Mono", monospace`;
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(txt, w / 2, px * 1.5);              // центр верхней грани
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;
+    return t;
+  };
+  return {
+    map: draw(`rgb(${body.map(v => Math.round(v * 255)).join(',')})`, legend),
+    glow: draw('#000', '#fff'),                      // белая легенда на чёрном — маска shine-through
+  };
+}
+
+function buildCaps(gltf) {
+  const src = gltf.scene;
+  const bySane = new Map();
+  src.traverse(o => { if (o.name) bySane.set(sane(o.name), o); });
+  const f = board.frame, s = board.frameScale * U;   // метры модели → миллиметры
+  const R = new THREE.Matrix4().set(
+    f[0] * s, f[1] * s, f[2] * s, 0,
+    f[3] * s, f[4] * s, f[5] * s, 0,
+    f[6] * s, f[7] * s, f[8] * s, 0,
+    0, 0, 0, 1);
+  const group = new THREE.Group();
+  const missing = [];
+  let refTop = null;                                // высота верха кэпа нижнего ряда — эталон для пробела
+  for (const k of keys) {
+    if (k.name === 'Space') continue;               // пробел строится плитой ниже: у модели аулы нет
+                                                    // ноды пробела, растянутая 1.25u-нода даёт обрезанные пандусы
+    const node = src.getObjectByName(k.cap) || bySane.get(sane(k.cap));
+    if (!node) { missing.push(k.cap); continue; }
+    node.updateWorldMatrix(true, false);
+    const geo = node.geometry;
+    geo.computeBoundingBox();
+    const center = geo.boundingBox.getCenter(new THREE.Vector3()).applyMatrix4(node.matrixWorld);
+    const M = new THREE.Matrix4()
+      .makeTranslation(k.u * U, 0, -k.v * U)
+      .multiply(new THREE.Matrix4().makeScale(k.capScale, 1, 1))
+      .multiply(R)
+      .multiply(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z))
+      .multiply(node.matrixWorld.clone());
+    bakeUV(geo, M);
+    const box = geo.boundingBox.clone();
+    // низ/верх кэпа в мире — по углам локального bbox: у аулы кэпы запечены с поворотом,
+    // box.max.y через M — не верх (даёт −0.61 при реальном верхе ~10.6мм)
+    let minY = Infinity, maxY = -Infinity;
+    for (const cx of [box.min.x, box.max.x]) for (const cy of [box.min.y, box.max.y]) for (const cz of [box.min.z, box.max.z]) {
+      const wy = new THREE.Vector3(cx, cy, cz).applyMatrix4(M).y;
+      if (wy < minY) minY = wy;
+      if (wy > maxY) maxY = wy;
+    }
+    M.premultiply(new THREE.Matrix4().makeTranslation(0, -1.5 - minY, 0));
+    k.baseM = M.clone();                            // статичная поза кэпа; анимация нажатия добавляет сдвиг по Y
+    k.box = [box.min.x, box.min.z, box.max.x - box.min.x, box.max.z - box.min.z];
+    k.mat = keyMaterial(photo, 1);
+    k.mesh = new THREE.Mesh(geo, k.mat);
+    k.mesh.matrixAutoUpdate = false;
+    k.mesh.matrix.copy(M);
+    k.mesh.userData.key = k;
+    group.add(k.mesh);
+
+    k.topY = maxY;                                  // реальный верх кэпа — для высоты пробела
+    if (k.name === 'Left_Alt') refTop = maxY;
+  }
+  // пробел — ровная плита с фаской: ширина/глубина по колодцу, верх на высоте соседнего кэпа
+  const sp = keys.find(k => k.name === 'Space');
+  if (sp && refTop !== null) {
+    const topW = (sp.w - 0.06) * U, topD = 0.86 * U, r = 1.3;
+    const sh = new THREE.Shape();
+    sh.moveTo(-topW / 2 + r, -topD / 2);
+    sh.lineTo(topW / 2 - r, -topD / 2); sh.quadraticCurveTo(topW / 2, -topD / 2, topW / 2, -topD / 2 + r);
+    sh.lineTo(topW / 2, topD / 2 - r); sh.quadraticCurveTo(topW / 2, topD / 2, topW / 2 - r, topD / 2);
+    sh.lineTo(-topW / 2 + r, topD / 2); sh.quadraticCurveTo(-topW / 2, topD / 2, -topW / 2, topD / 2 - r);
+    sh.lineTo(-topW / 2, -topD / 2 + r); sh.quadraticCurveTo(-topW / 2, -topD / 2, -topW / 2 + r, -topD / 2);
+    const h = refTop + 1.5;                           // от пола колодца (-1.5) до верха соседних кэпов
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: h - 1.0, bevelEnabled: true, bevelThickness: 0.5, bevelSize: 0.5, bevelSegments: 3 });
+    geo.rotateX(Math.PI / 2);
+    geo.computeBoundingBox();
+    const b = geo.boundingBox;
+    geo.translate(-(b.min.x + b.max.x) / 2, -b.max.y, -(b.min.z + b.max.z) / 2);   // верх в y=0, центр в нуле
+    const M = new THREE.Matrix4().makeTranslation(sp.u * U, refTop, -sp.v * U);   // верх вровень с соседними кэпами
+    bakeUV(geo, M);
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    sp.box = [bb.min.x, bb.min.z, bb.max.x - bb.min.x, bb.max.z - bb.min.z];
+    sp.baseM = M.clone();
+    sp.mat = keyMaterial(photo, 1);
+    sp.mesh = new THREE.Mesh(geo, sp.mat);
+    sp.mesh.matrixAutoUpdate = false;
+    sp.mesh.matrix.copy(M);
+    sp.mesh.userData.key = sp;
+    sp.topY = refTop;
+    group.add(sp.mesh);
+  }
+  if (missing.length) console.warn('не нашлись кэпы:', [...new Set(missing)]);
+  return group;
+}
+
+// ---------- демо-волна: своя подсветка, если железо занято ----------
+let wave = location.search.includes('wave');
+const waveBtn = document.createElement('button');
+waveBtn.textContent = 'волна';
+waveBtn.title = 'радуга по доске — для показа, если клавиатура занята';
+waveBtn.style.cssText = 'width:auto;padding:0 12px;height:34px;font:600 12px var(--mono)';
+waveBtn.onclick = () => {
+  wave = !wave;
+  waveBtn.classList.toggle('on', wave);
+  if (!wave) for (const k of keys) { k.flash = 0; k.k = -1; }   // k.k = -1 заставит перерисовать цвета
+};
+document.getElementById('palette').append(waveBtn);
+const waveFrame = new Uint8Array(378);
+function makeWave(t) {
+  for (const k of keys) {
+    const d = Math.hypot(k.u * 1.0, k.v * 1.6) * 0.55 - t * 0.0022;
+    const b = 0.5 + 0.5 * Math.sin(t * 0.0016 - d * 6.0);
+    const h = (d * 0.9) % 1;
+    const c = new THREE.Color().setHSL((h + 1) % 1, 0.95, 0.5).multiplyScalar(0.35 + 0.65 * Math.pow(b, 0.7));
+    const i = k.slot * 3;
+    waveFrame[i] = c.r * 255; waveFrame[i + 1] = c.g * 255; waveFrame[i + 2] = c.b * 255;
+  }
+  return waveFrame;
+}
+
+// ---------- кадр подсветки: 378 байт RGB, 126 слотов ----------
+const frame = new Uint8Array(378);
+function applyFrame(b64) {
+  if (wave) return;                              // в режиме волны кадры с железа игнорируем
+  const bin = atob(b64);
+  for (let i = 0; i < 378; i++) frame[i] = bin.charCodeAt(i);
+  for (const k of keys) {
+    if (!k.mat) continue;
+    applyRGB(k, frame[k.slot * 3], frame[k.slot * 3 + 1], frame[k.slot * 3 + 2]);
+  }
+}
+function applyRGB(k, r, g, b) {
+  const mx = Math.max(r, g, b);
+  const base = mx < 26 ? 0 : Math.pow(mx / 255, 0.9);
+  const fl = k.flash || 0;
+  const kk = Math.max(base, fl);                         // нажатие вспыхивает даже на погашенной клавише
+  if (fl) k.flash = fl > 0.04 ? fl * 0.6 : 0;            // вспышка гаснет за ~4 кадра
+  if (Math.abs((k.k || 0) - kk) < 0.02 && !fl && k.k !== undefined && k.k >= 0) return;
+  k.k = kk;
+  k.mat.uniforms.k.value = kk;
+  k.mat.uniforms.led.value.setRGB(Math.min(1, r / 255 + fl * 0.4), Math.min(1, g / 255 + fl * 0.4), Math.min(1, b / 255 + fl * 0.45));
+}
+function press(slot) {
+  const k = keys.find(x => x.slot === slot);
+  if (!k) return;
+  k.flash = 1.15;                            // вспышку гасит кадровый цикл
+  if (k.mesh) { k.pressT0 = performance.now(); k.sounded = false; PRESSING.add(k); }   // кэп утапливается
+  thock(true);
+}
+
+// ---------- анимация нажатия: 45мс вниз, потом пружина обратно ----------
+// matrixAutoUpdate=false, поза живёт в k.baseM — утопление это сдвиг по Y в колонке трансляции,
+// updateMatrix() тут нельзя: он соберёт матрицу из position/scale и утащит кэп в origin.
+const PRESSING = new Set();
+function tickPress(t) {
+  for (const k of PRESSING) {
+    const dt = t - k.pressT0;
+    const depth = dt < 55 ? dt / 55 : Math.exp(-(dt - 55) / 110) * Math.cos((dt - 55) / 110 * 2.0);
+    k.mesh.matrix.copy(k.baseM);
+    k.mesh.matrix.elements[13] -= 3.2 * Math.max(0, depth);   // полный ход механики
+    if (dt > 130 && !k.sounded) { k.sounded = true; thock(false); }   // возврат — тише и выше
+    if (dt > 500) { k.mesh.matrix.copy(k.baseM); PRESSING.delete(k); }
+  }
+}
+
+// ---------- клик по клавише в 3D = нажатие (для показа без клавиатуры) ----------
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let ptrDown = null;
+renderer.domElement.addEventListener('pointerdown', e => { ptrDown = { x: e.clientX, y: e.clientY, t: performance.now() }; });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!ptrDown || !deckGroup) return;
+  const click = Math.hypot(e.clientX - ptrDown.x, e.clientY - ptrDown.y) < 6 && performance.now() - ptrDown.t < 350;
+  ptrDown = null;
+  if (!click) return;                       // это был поворот камеры
+  const r = renderer.domElement.getBoundingClientRect();
+  ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(deckGroup.children, true).find(h => h.object.userData.key);
+  if (hit) press(hit.object.userData.key.slot);
+});
+
+// ---------- лог предикта ----------
+const candsEl = document.getElementById('cands'), ctxEl = document.getElementById('ctx'),
+  statsEl = document.getElementById('stats'), feedEl = document.getElementById('feed'), netEl = document.getElementById('net');
+const hist = [];
+let hit1 = 0, hit3 = 0, total = 0, lastKeyAt = 0, typed = [], wpm = 0, inferMs = 0, layout = 'en';
+const show = c => c === ' ' ? '␣' : c === '\n' ? '⏎' : c;
+const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+function statsHtml() {
+  const pc = n => total ? (n / total * 100).toFixed(0) + '%' : '—';
+  statsEl.innerHTML = [
+    ['нажатий', typed.length], ['симв/мин', wpm], ['инференс', inferMs.toFixed(1) + ' мс'],
+    ['раскладка', layout.toUpperCase()], ['в топ-1', `${hit1} · ${pc(hit1)}`], ['в топ-3', `${hit3 + hit1} · ${pc(hit3 + hit1)}`],
+  ].map(([t, v]) => `<div><span>${t}</span> ${v}</div>`).join('');
+}
+function feedHtml() {
+  feedEl.innerHTML = hist.slice(-8).reverse().map(h => {
+    const m = h.rank === 0 ? ['hit1', '✓ топ-1'] : h.rank > 0 ? ['hit3', `✓ топ-${h.rank + 1}`] : ['miss', '✗ мимо'];
+    return `<li><span class="tail">${esc(h.tail)}</span><span class="ch">${h.typed ? esc(show(h.typed)) : ''}</span>` +
+      `<span class="mark ${h.typed ? m[0] : ''}">${h.typed ? m[1] : ''}</span></li>`;
+  }).join('');
+}
+function onPred(p) {
+  inferMs = p.ms; layout = p.layout;
+  candsEl.innerHTML = p.cands.map(c => `<div class="cand-chip" style="border-color:${c.hex}">
+      <span class="ch">${esc(show(c.ch))}</span><span class="p">${(c.p * 100).toFixed(1)}%</span>
+      <span class="r">ранг ${c.rank + 1}</span></div>`).join('');
+  const chars = [...p.ctx];
+  ctxEl.innerHTML = (chars.slice(-90).map(esc).join('') || 'контекст пуст') + '<b>▌</b>';
+  document.getElementById('cands-title').textContent = `ставки модели · контекст ${chars.length} симв`;
+  hist.push({ cands: p.cands, tail: chars.slice(-20).join('') });
+  if (hist.length > 40) hist.shift();
+  feedHtml(); statsHtml();
+}
+function onKey(k) {
+  if (k.slot !== null) press(k.slot);
+  if (k.mod & 3 || !k.ch) return;
+  const now = Date.now();
+  lastKeyAt = now;
+  typed.push(now);
+  typed = typed.filter(t => now - t < 13000);
+  const span = (now - typed[0]) / 60000;
+  wpm = span > 0.05 ? Math.round(typed.length / 5 / span) : 0;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (hist[i].typed !== undefined) continue;
+    const rank = hist[i].cands.findIndex(c => c.ch === k.ch);
+    hist[i].typed = k.ch; hist[i].rank = rank;
+    total++;
+    if (rank === 0) hit1++; else if (rank > 0) hit3++;
+    break;
+  }
+  feedHtml(); statsHtml();
+}
+
+// ---------- расцветка ----------
+const palette = document.getElementById('palette');
+function loadPhoto(key) {
+  return new Promise((res, rej) => {
+    new THREE.TextureLoader().load(`assets/photos/full/${key}.png`, t => {
+      t.colorSpace = THREE.NoColorSpace; t.anisotropy = 8;
+      res(t);
+    }, undefined, rej);
+  });
+}
+async function setColor(key) {
+  const tex = await loadPhoto(key);
+  photo.image = tex.image;
+  photo.needsUpdate = true;
+  for (const k of keys) {                        // кэпам — канвас-текстуры: цвет с фото, легенды свои
+    if (!k.mat) continue;
+    try {
+      const body = bodyColor(tex.image, k.rectPx);
+      const lum = 0.299 * body[0] + 0.587 * body[1] + 0.114 * body[2];
+      const legend = lum > 0.7 ? 'rgba(30,34,44,0.45)' : 'rgba(255,255,255,0.55)';   // прозрачная гравировка, не печать
+      if (k.capTex) { k.capTex.map.dispose(); k.capTex.glow.dispose(); }
+      k.capTex = capTexture(k, body, legend);
+      k.mat.uniforms.photo.value = k.capTex.map;
+      k.mat.uniforms.glowMap.value = k.capTex.glow;
+    } catch (e) { console.warn('текстура не вышла:', k.name, e.message); }
+  }
+  for (const m of deckMats) m.uniforms.frameColor.value.setRGB(...bodyColor(tex.image, FRAME_PX));   // рамка — цвет с угла фото
+  for (const b of palette.querySelectorAll('button')) b.classList.toggle('on', b.dataset.k === key);
+  localStorage.setItem('mchose-color', key);
+}
+for (const [key, name] of COLORS) {
+  const b = document.createElement('button');
+  b.dataset.k = key; b.title = name;
+  b.style.backgroundImage = `url(assets/photos/full/${key}.png)`;
+  b.onclick = () => setColor(key);
+  palette.append(b);
+}
+
+// ---------- загрузка ----------
+function resize() {
+  const w = st.clientWidth, h = renderer.domElement.clientHeight || 500;
+  renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+const SHOT = location.search.includes('shot');   // режим снимка: рендерим пару кадров и замираем
+let running = true;
+(function tick() {
+  if (running) requestAnimationFrame(tick);
+  tickPress(performance.now());
+  if (controls.enabled) controls.update();   // во время интро-твина orbit молчит, иначе он перезаписывает позицию
+  composer.render();
+})();
+
+// интро: подлёт к доске за 1.8с; первое касание отменяет — orbit не ломаем
+function introFly() {
+  const fromP = camera.position.clone(), fromT = controls.target.clone();
+  const to = fromP.clone().multiply(new THREE.Vector3(1.9, 1.35, 1.9)).add(new THREE.Vector3(0, 160, 0));
+  const toT = fromT.clone().add(new THREE.Vector3(0, -30, 0));
+  camera.position.copy(to); controls.target.copy(toT);
+  controls.enabled = false;
+  const t0 = performance.now(), dur = 1800;
+  let cancelled = false;
+  const stop = () => { cancelled = true; controls.enabled = true; controls.update(); removeEventListener('pointerdown', stop); };
+  addEventListener('pointerdown', stop, { once: true });
+  (function step() {
+    if (cancelled) return;
+    const q = Math.min((performance.now() - t0) / dur, 1), e = 1 - Math.pow(1 - q, 3);
+    camera.position.lerpVectors(to, fromP, e);           // старт из дальней точки, финиш — рабочая поза
+    controls.target.lerpVectors(toT, fromT, e);
+    controls.update();
+    if (q < 1) requestAnimationFrame(step);
+    else stop();
+  })();
+};
+
+// мягкий «thock» нажатия: шумовой транзиент + низкий синус-тук, синтез на лету
+const AUDIO = { ctx: null, master: null, noise: null };
+function audioInit() {
+  if (AUDIO.ctx) { if (AUDIO.ctx.state === 'suspended') AUDIO.ctx.resume(); return; }
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = ctx.createGain(); master.gain.value = 0.5;
+  const comp = ctx.createDynamicsCompressor();
+  master.connect(comp); comp.connect(ctx.destination);
+  const len = ctx.sampleRate * 0.1, buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const d = buf.getChannelData(0); let last = 0;
+  for (let i = 0; i < len; i++) { last = last * 0.55 + (Math.random() * 2 - 1) * 0.45; d[i] = last; }
+  Object.assign(AUDIO, { ctx, master, noise: buf });
+}
+function thock(down = true) {
+  audioInit();
+  const { ctx, master, noise } = AUDIO, t = ctx.currentTime;
+  const rnd = 0.92 + Math.random() * 0.16;                       // ±8% — иначе машинно
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass';
+  bp.frequency.value = (down ? 1600 : 2200) * rnd; bp.Q.value = 1.1;
+  const ng = ctx.createGain();
+  ng.gain.setValueAtTime(down ? 0.5 : 0.22, t);
+  ng.gain.exponentialRampToValueAtTime(0.0001, t + (down ? 0.045 : 0.03));
+  const src = ctx.createBufferSource(); src.buffer = noise;
+  src.connect(bp); bp.connect(ng); ng.connect(master);
+  src.start(t); src.stop(t + 0.06);
+  if (down) {
+    const osc = ctx.createOscillator(); osc.type = 'sine';
+    osc.frequency.setValueAtTime(190 * rnd, t);
+    osc.frequency.exponentialRampToValueAtTime(92, t + 0.05);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.17, t);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+    osc.connect(og); og.connect(master);
+    osc.start(t); osc.stop(t + 0.08);
+  }
+}
+(async () => {
+  board = await (await fetch('assets/3d/g75-board.json')).json();
+  keys = board.keys.map(k => ({ ...k }));
+  for (const k of keys) k.rectPx = [k.rect[0] * PHOTO_W, k.rect[1] * PHOTO_H, k.rect[2] * PHOTO_W, k.rect[3] * PHOTO_H];
+
+  const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync('assets/3d/aula-f75.glb');
+  deckGroup = new THREE.Group();
+  deckGroup.add(buildDeck());
+  const fu = keys.map(k => Math.abs(k.u) + (k.w + 0.1) / 2), fv = keys.map(k => Math.abs(k.v) + 0.5);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(Math.max(...fu) * 2 * U, Math.max(...fv) * 2 * U),
+    new THREE.MeshBasicMaterial({ color: 0x14181f }));   // щели тёмные, как у живой доски: фото в колодцах светило синими краями клавиш
+  plate.rotation.x = -Math.PI / 2;
+  plate.position.y = -2.8;                      // плата под кэпами: в зазорах видно её, а не пустоту
+  deckGroup.add(plate);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(board.deck.w * U * 0.98, board.deck.d * U * 0.98),
+    new THREE.MeshBasicMaterial({ color: 0x2a2d33 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = -12.4;
+  deckGroup.add(floor);
+  deckGroup.add(buildCaps(gltf));
+  scene.add(deckGroup);
+  for (const m of deckMats) {                   // тень колодцев на рамку
+    m.uniforms.aoMap.value = buildAO();
+    m.uniforms.deckMM.value.set(board.deck.w * U, board.deck.d * U);
+  }
+
+  // фон-подложка: мягкая тень под доской
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(board.deck.w * U * 1.9, board.deck.d * U * 3.4),
+    new THREE.MeshBasicMaterial({ map: glowTex, transparent: true, opacity: 0.35, color: 0x000000, depthWrite: false }));
+  sh.rotation.x = -Math.PI / 2; sh.position.set(0, -14.5, 6);
+  scene.add(sh);
+
+  await setColor(localStorage.getItem('mchose-color') || 'iceBlue');
+  introFly();
+  resize();
+  loadEl.classList.add('gone');
+  const built = keys.filter(k => k.mesh).length;
+  hint.textContent = `тяни мышью — поворот · колесо — приблизить · клик по клавише — нажать · собрано ${built} из ${keys.length}`;
+  window.__dbg = { keys, THREE, deckGroup, camera, controls };   // отладка: module scope снаружи не виден
+  console.log('доска собрана:', built, 'из', keys.length);
+  if (SHOT) { for (let i = 0; i < 3; i++) composer.render(); running = false; }
+})();
+
+// ---------- канал ----------
+const es = new EventSource('/events');
+es.onopen = () => { netEl.className = 'on'; netEl.textContent = 'связь есть · 25 кадров/с'; };
+es.onerror = () => { netEl.className = 'off'; netEl.textContent = 'нет связи · запусти node candle.cjs --mirror'; };
+es.addEventListener('hello', e => { const h = JSON.parse(e.data); netEl.textContent = `модель ${h.model} · ${h.fps} кадров/с`; });
+es.addEventListener('f', e => applyFrame(JSON.parse(e.data).d));
+es.addEventListener('k', e => onKey(JSON.parse(e.data)));
+es.addEventListener('p', e => onPred(JSON.parse(e.data)));
+setInterval(() => { if (Date.now() - lastKeyAt < 1500 || !wpm) return; wpm = 0; statsHtml(); }, 1000);
+statsHtml();
+(function waveLoop() {
+  requestAnimationFrame(waveLoop);
+  if (!wave || !keys.length) return;
+  frame.set(makeWave(performance.now()));
+  for (const k of keys) {                        // прямой прогон, минуя atob
+    const r = frame[k.slot * 3], g = frame[k.slot * 3 + 1], b = frame[k.slot * 3 + 2];
+    applyRGB(k, r, g, b);
+  }
+})();
+</script>
+</body>
+</html>

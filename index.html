@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Меня можно предсказать на 95% · MCHOSE G75 Pro · кейс</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23101418'/%3E%3Crect x='4' y='6' width='8' height='4' rx='1' fill='%233de07b'/%3E%3C/svg%3E">
+<style>
+/* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio.
+   Put this @layer first; product CSS outside the layer always wins. */
+@layer od-layout {
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+
+  /* containers */
+  .od-stack   { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+  .od-row     { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+  .od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+  .od-fill    { flex: 1 1 0; min-width: 0; }
+  .od-fixed   { flex: none; }
+  .od-grid    { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
+
+  /* stacked information: each piece is its own line — never sibling inline spans */
+  .od-stat, .od-field, .od-cell { display: grid; gap: var(--od-gap, 2px); }
+  :where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+  .od-tile { display: grid; grid-template-rows: auto 1fr; }
+  :where(.od-tile) > :where(*) { display: block; }
+
+  /* media keeps its intrinsic ratio by default; never a distorted or cropped
+     cover by accident. height:auto lets the ratio win over an <img height="…">
+     attribute. Cropping to a uniform box is an explicit opt-in: set --od-ratio
+     AND add .od-media-cover together (per the core rule, only where a crop is
+     deliberate — tile thumbs, decorative fills — never on full-frame content). */
+  .od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+  .od-media-cover { object-fit: cover; }
+
+  /* data text only — authored copy is rewritten to its budget instead */
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-clamp-2, .od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .od-clamp-2 { -webkit-line-clamp: 2; }
+  .od-clamp-3 { -webkit-line-clamp: 3; }
+  .od-lines-2 { min-height: calc(2 * 1.4em); }   /* block-level reservation for a shared baseline */
+  .od-nowrap  { white-space: nowrap; }           /* 数字+单位 · 价格+起 · 日期+星期 */
+  .od-keep    { word-break: keep-all; overflow-wrap: anywhere; } /* CJK labels break at spaces / <wbr> first */
+
+  /* screen skeleton (optional): bars take their own space, the middle scrolls — no padding guessed for chrome */
+  .od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+  .od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+
+  /* horizontal rail: the next item peeks at the edge; trailing room survives overflow */
+  .od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+             padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+  .od-rail::-webkit-scrollbar { display: none; }
+  :where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+  :where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
+
+  .od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+  .od-touch  { min-width: 44px; min-height: 44px; }
+}
+/* /OD-LAYOUT-PRIMITIVES v1 */
+
+/* Hallmark · macrostructure: Photographic · H6 photographic fold, captions in corners · nav: none · footer: Ft5 Statement
+ * theme: custom (tokens.css) · genre: atmospheric · enrichment: Tier E — кадры three.js-сцены (Stills) + живой блок в iframe
+ * pre-emit critique: P5 H4 E4 S5 R4 V5
+ */
+
+/* Холст кейса — 1920 design px. Внутри слайда всё в calc(var(--u) * N), N в design px. */
+:root {
+  --u: calc(100cqi / 1920);
+  --pad: calc(var(--u) * 112);
+  --gut: calc(var(--u) * 32);
+  --fs-head: calc(var(--u) * 60);
+  --fs-body: calc(var(--u) * 34);
+  --fs-cap: calc(var(--u) * 26);
+  --fs-mono: calc(var(--u) * 24);
+  --dim-bar: color-mix(in oklch, var(--color-ink-2) 50%, transparent);
+  /* включение кадра: доска проявляется тёмной, ставки загораются по порядку */
+  --shot-reveal: 400ms;
+  --shot-lead: 360ms;
+  --shot-step: 280ms;
+  --shot-fade: 240ms;
+}
+
+html, body { margin: 0; background: var(--color-paper); color: var(--color-ink); overflow-x: clip; }
+body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+* { box-sizing: border-box; }
+
+.case { container-type: inline-size; max-width: 1920px; margin-inline: auto; }
+
+.slide {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: calc(var(--pad) - var(--gut)) repeat(12, minmax(0, 1fr)) calc(var(--pad) - var(--gut));
+  column-gap: var(--gut);
+  row-gap: var(--row, calc(var(--u) * 56));
+  align-content: start;
+  padding-block: var(--pt, calc(var(--u) * 128)) var(--pb, calc(var(--u) * 128));
+  background: var(--color-paper);
+  overflow: clip;
+}
+.slide > * { min-width: 0; }
+.full { grid-column: 1 / -1; }
+.main { grid-column: 2 / -2; }
+.l4 { grid-column: 2 / span 4; }
+.l5 { grid-column: 2 / span 5; }
+.l6 { grid-column: 2 / span 6; }
+.l7 { grid-column: 2 / span 7; }
+.l8 { grid-column: 2 / span 8; }
+.r4 { grid-column: span 4 / -2; }
+.r5 { grid-column: span 5 / -2; }
+.r6 { grid-column: span 6 / -2; }
+.end { align-self: end; }
+
+/* текст */
+.head { margin: 0; font: 700 var(--fs-head)/1.04 var(--font-display); font-stretch: 80%; letter-spacing: -0.01em; color: var(--color-ink); text-wrap: balance; }
+.h3 { margin: 0; font: 600 calc(var(--u) * 36)/1.25 var(--font-body); color: var(--color-ink); }
+.body { margin: 0; font: 400 var(--fs-body)/1.5 var(--font-body); color: var(--color-ink-2); text-wrap: pretty; }
+.body.dim { color: var(--color-muted); }
+.cap { margin: 0; font: 400 var(--fs-cap)/1.45 var(--font-body); color: var(--color-muted); text-wrap: pretty; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.text { --od-gap: calc(var(--u) * 24); }
+
+/* подгонка строки по ширине: JS ставит --fs в design px */
+.fitbox { display: block; }
+.fit { font-size: calc(var(--u) * var(--fs, 120)); }
+
+/* кадры сцены */
+.shot-fig { margin: 0; display: grid; gap: calc(var(--u) * 20); }
+.shot, .layer, .nogl { display: block; width: 100%; aspect-ratio: var(--ar, 16 / 9); }
+.shot { height: auto; background: var(--color-paper); opacity: 0; transition: opacity var(--shot-reveal) var(--ease-out); }
+.shot[data-rendered] { opacity: 1; }
+.shot-fig > canvas { grid-area: 1 / 1; }
+.layer {
+  z-index: 1; height: auto; opacity: 0; pointer-events: none;
+  transition: opacity var(--shot-fade) var(--ease-out) calc(var(--shot-lead) + var(--i, 0) * var(--shot-step));
+}
+.shot-fig.on > .layer { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .shot, .layer { transition: none; } }
+.nogl {
+  margin: 0; display: grid; place-content: center; justify-items: center; gap: calc(var(--u) * 16);
+  padding: var(--pad); text-align: center;
+  border: var(--rule-hair) solid var(--color-rule-2);
+}
+.nogl-h { display: block; font: 600 calc(var(--u) * 40)/1.2 var(--font-body); color: var(--color-ink-2); }
+.shot[hidden], .nogl[hidden] { display: none; }
+
+/* шрифт уверенности: строка букв, у каждой --t = p^0.4 (правила .cf/.g в tokens.css) */
+.glyphs { margin: 0; display: inline-flex; align-items: flex-start; line-height: 1; white-space: nowrap; }
+.glyphs > .g { display: inline-grid; justify-items: stretch; row-gap: calc(var(--u) * 14); padding-right: calc(var(--u) * 6); }
+.glyphs .ch { display: block; line-height: 0.92; }
+.glyphs .g.gap .ch { width: calc(0.22em + var(--t, 0.5) * 0.3em); }
+.glyphs .bar { display: block; height: calc(var(--u) * 8); border-radius: calc(var(--u) * 2); background: var(--k, var(--color-rule-2)); }
+.glyphs .g.nobet .bar { background: transparent; }
+.glyphs .pp { display: block; font: 400 calc(var(--u) * 22)/1 var(--font-mono); font-stretch: 100%; color: var(--color-muted); white-space: nowrap; }
+
+/* 01 · титул */
+.s01 { --pt: calc(var(--u) * 104); --pb: calc(var(--u) * 96); --row: calc(var(--u) * 40); }
+.title {
+  margin: 0; display: inline-block; white-space: nowrap;
+  font: 800 1em/0.9 var(--font-display); font-stretch: 66%; letter-spacing: -0.02em;
+  font-size: calc(var(--u) * var(--fs, 200));
+}
+.lede { margin: 0; font: 400 calc(var(--u) * 42)/1.4 var(--font-body); color: var(--color-ink); text-wrap: pretty; }
+
+/* 02 · фраза */
+.s02 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 128); --row: calc(var(--u) * 72); }
+.specimen { margin: 0; display: flex; align-items: flex-end; gap: calc(var(--u) * 36); font-size: calc(var(--u) * 132); line-height: 1; }
+.specimen > .g { display: grid; justify-items: center; row-gap: calc(var(--u) * 14); }
+.specimen .ch { display: block; line-height: 0.9; }
+.specimen .pp { display: block; font: 400 calc(var(--u) * 22)/1 var(--font-mono); font-stretch: 100%; color: var(--color-muted); }
+
+/* 03 · макро */
+.s03 { --pt: 0px; --pb: calc(var(--u) * 120); --row: calc(var(--u) * 56); }
+.bets { list-style: none; margin: 0; padding: 0; display: grid; row-gap: calc(var(--u) * 28); }
+.bet { display: grid; grid-template-columns: calc(var(--u) * 14) calc(var(--u) * 150) minmax(0, 1fr); column-gap: calc(var(--u) * 28); align-items: center; }
+.bet .sw { display: block; align-self: stretch; border-radius: calc(var(--u) * 3); background: var(--k); }
+.bet .big { font-size: calc(var(--u) * 128); line-height: 0.9; }
+.bet .big .ch { display: block; }
+.bet .meta { --od-gap: calc(var(--u) * 6); }
+.bet .rk { font: 600 calc(var(--u) * 30)/1.2 var(--font-body); color: var(--color-ink); }
+.bet .kv { font-size: calc(var(--u) * 26); line-height: 1.3; color: var(--color-muted); }
+
+/* живой блок */
+.embed { display: block; }
+.embed iframe { display: block; width: 100%; height: max(56.25cqi, 820px); border: 0; background: var(--color-paper); }
+
+/* 04 · свет на колпачках */
+.s04 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 128); --row: calc(var(--u) * 48); }
+.pairs { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 24) calc(var(--u) * 72); }
+.pair { --od-gap: calc(var(--u) * 14); }
+.sws { display: flex; gap: calc(var(--u) * 12); }
+.swk { display: block; width: calc(var(--u) * 96); aspect-ratio: 1; border-radius: calc(var(--u) * 12); background: var(--k); }
+.pair .lab { font: 500 calc(var(--u) * 24)/1.3 var(--font-body); color: var(--color-ink-2); }
+
+/* 05 · данные */
+.s05 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 48); }
+.nums { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--gut); }
+.nums > * { display: block; }
+.bignum { display: block; font: 800 calc(var(--u) * 176)/0.88 var(--font-display); font-stretch: 68%; letter-spacing: -0.02em; white-space: nowrap; color: var(--color-ink); }
+.bignum.dim { font-weight: 250; color: var(--color-muted); }
+.nums .r { text-align: right; }
+.ticks { display: flex; align-items: stretch; gap: calc(var(--u) * 4); height: calc(var(--u) * 200); }
+.tick { display: block; flex: 1 1 0; border-radius: calc(var(--u) * 1); background: var(--color-rule); }
+.tick.own { background: var(--color-ink); }
+.tick.part { flex-grow: 0.3; }
+.tlabels { display: flex; justify-content: space-between; gap: var(--gut); }
+.tlabels .r { text-align: right; }
+
+/* 06 · сто нажатий */
+.s06 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 64); }
+.ucol { --od-gap: calc(var(--u) * 28); }
+.unum { display: block; font: 800 calc(var(--u) * 240)/0.82 var(--font-display); font-stretch: 66%; letter-spacing: -0.02em; }
+.unum.dim { font-weight: 250; color: var(--color-ink-2); }
+.ulab { --od-gap: calc(var(--u) * 6); }
+.units { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: calc(var(--u) * 10); width: min(100%, calc(var(--u) * 680)); }
+.unit { display: block; aspect-ratio: 1; border-radius: calc(var(--u) * 8); background: var(--color-paper-3); }
+.unit.u1 { background: var(--led-1); }
+.unit.u23 { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 4) var(--color-muted); }
+.legend { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 16) calc(var(--u) * 48); }
+.legend > span { display: flex; align-items: center; gap: calc(var(--u) * 14); font: 400 calc(var(--u) * 26)/1.3 var(--font-body); color: var(--color-ink-2); }
+.legend .unit { width: calc(var(--u) * 28); }
+
+/* 07 · 401 ставка */
+.s07 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 120); --row: calc(var(--u) * 56); }
+.top3 { list-style: none; margin: 0; padding: 0; display: grid; row-gap: calc(var(--u) * 18); }
+.top3 li { display: grid; grid-template-columns: calc(var(--u) * 12) calc(var(--u) * 96) minmax(0, 1fr); column-gap: calc(var(--u) * 20); align-items: center; }
+.top3 .sw { display: block; align-self: stretch; border-radius: calc(var(--u) * 3); background: var(--k); }
+.top3 .big { font-size: calc(var(--u) * 84); line-height: 0.9; }
+.top3 .big .ch { display: block; }
+.top3 .v { font-size: calc(var(--u) * 30); color: var(--color-ink); }
+.top3 .rest { grid-column: 2 / -1; font: 400 calc(var(--u) * 26)/1.4 var(--font-body); color: var(--color-muted); }
+.spectrum { display: flex; align-items: flex-end; gap: calc(var(--u) * 1); height: calc(var(--u) * 560); padding-inline: calc(var(--u) * 24); }
+.sb { display: block; flex: 1 1 0; height: calc(var(--h) * 100%); border-radius: calc(var(--u) * 1) calc(var(--u) * 1) 0 0; background: var(--dim-bar); }
+.sb.lit { background: var(--k); }
+
+/* 08 · промах */
+.s08 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 64); }
+.bigtype {
+  display: inline-grid; grid-template-columns: auto auto auto; grid-template-areas: "l1 l1 l1" "l2 caret cands";
+  align-items: start; line-height: 0.9; white-space: nowrap;
+}
+.bigtype .l1 { grid-area: l1; }
+.bigtype .l2 { grid-area: l2; }
+.bigtype .l1, .bigtype .l2 { margin: 0; display: block; }
+.bigtype .caret { grid-area: caret; display: block; width: 0.05em; height: 0.74em; margin: 0.06em 0.05em 0 0.03em; background: var(--color-ink); }
+.cands { grid-area: cands; list-style: none; margin: 0; padding: 0.04em 0 0; display: grid; row-gap: 0.08em; }
+.cand { display: grid; grid-template-columns: calc(var(--u) * 24) auto auto; column-gap: calc(var(--u) * 20); align-items: center; }
+.cand .sw { display: block; width: calc(var(--u) * 24); aspect-ratio: 1; border-radius: calc(var(--u) * 5); background: var(--k); }
+.cand.off .sw { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 3) var(--color-muted); }
+.cand .cf { font-size: 0.5em; line-height: 0.9; }
+.cand .cf .ch { display: block; }
+.cand .lab { font: 500 calc(var(--u) * 24)/1.3 var(--font-mono); color: var(--color-muted); white-space: nowrap; }
+.cand.got .lab { color: var(--color-ink); }
+.cand .spg { display: block; width: 0.5em; height: 0.2em; margin-top: 0.4em; border: 0.05em solid currentColor; border-top: 0; }
+
+/* 09 · кадр */
+.s09 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 56); }
+.dump {
+  display: grid; grid-template-columns: calc(var(--u) * 64) repeat(14, minmax(0, 1fr));
+  gap: calc(var(--u) * 8);
+  font: 400 calc(var(--u) * 19)/1 var(--font-mono);
+}
+.dump > * { display: block; padding: calc(var(--u) * 9) calc(var(--u) * 4); border-radius: calc(var(--u) * 4); white-space: nowrap; text-align: center; }
+.dump .ix { padding-left: 0; text-align: left; color: var(--color-muted); }
+.dump .hd { grid-column: 2 / -1; text-align: left; color: var(--color-ink); font-weight: 600; }
+.dump .b { color: var(--color-ink-2); }
+.dump .z { color: var(--color-muted); font-weight: 300; }
+.dump .hot { background: var(--k); color: var(--on); font-weight: 700; }
+
+/* 10 · миллисекунды */
+.s10 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 56); }
+.lanes { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: var(--gut); row-gap: calc(var(--u) * 32); align-items: center; }
+.lane-l { --od-gap: calc(var(--u) * 6); }
+.lane-l .v { font: 700 calc(var(--u) * 56)/1 var(--font-display); font-stretch: 72%; color: var(--color-ink); }
+.lane-l .n { font: 400 calc(var(--u) * 26)/1.35 var(--font-body); color: var(--color-muted); }
+.lane-b {
+  display: block; height: calc(var(--u) * 64);
+  background: repeating-linear-gradient(90deg, var(--color-rule-2) 0 calc(var(--u) * 2), transparent calc(var(--u) * 2) 25%);
+}
+.lane-b .fill { display: block; height: 100%; width: calc(var(--v) / 40 * 100%); border-radius: calc(var(--u) * 4); background: var(--color-ink); }
+.lane-b .fill.soft { background: var(--color-ink-2); }
+.lane-b .fill.send { background: var(--color-muted); }
+.lane-b .fill.budget { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 3) var(--color-muted); }
+.axis { grid-column: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 0; font: 500 calc(var(--u) * 24)/1 var(--font-mono); color: var(--color-muted); }
+.axis > span { display: block; white-space: nowrap; transform: translateX(-50%); }
+.axis > span:first-child { transform: none; }
+.axis > span:last-child { transform: translateX(-100%); }
+.chain { margin: 0; font: 500 calc(var(--u) * 30)/1.6 var(--font-mono); color: var(--color-ink-2); text-wrap: balance; }
+
+/* 11 · коллектор и события */
+.s11 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 72); }
+.events { border-collapse: collapse; width: 100%; font: 500 calc(var(--u) * 28)/1.2 var(--font-mono); color: var(--color-ink); }
+.events th { padding: 0 calc(var(--u) * 24) calc(var(--u) * 18) 0; text-align: left; font: 500 calc(var(--u) * 22)/1.3 var(--font-body); color: var(--color-muted); }
+.events td { padding: calc(var(--u) * 10) calc(var(--u) * 24) calc(var(--u) * 10) 0; white-space: nowrap; vertical-align: middle; }
+.events .ctx { color: var(--color-muted); }
+.events caption { caption-side: bottom; text-align: left; padding-top: calc(var(--u) * 24); }
+.chips { display: flex; gap: calc(var(--u) * 8); }
+.chip { display: grid; place-items: center; width: calc(var(--u) * 52); height: calc(var(--u) * 52); border-radius: calc(var(--u) * 8); background: var(--k); color: var(--on); font-weight: 700; }
+.chip .spc { display: block; width: 50%; height: 24%; border: calc(var(--u) * 3) solid currentColor; border-top: 0; }
+.events .res { font: 400 calc(var(--u) * 26)/1.2 var(--font-body); color: var(--color-ink-2); }
+.events .res.miss { color: var(--color-muted); }
+
+/* 12 · финал */
+.s12 { --pt: 0px; --pb: calc(var(--u) * 136); --row: calc(var(--u) * 72); }
+
+/* 13 · стенд, 14 · финальная фраза */
+.s13 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 72); --row: calc(var(--u) * 48); }
+.s14 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 112); }
+.statement { margin: 0; font: 700 calc(var(--u) * 128)/0.96 var(--font-display); font-stretch: 70%; letter-spacing: -0.015em; color: var(--color-ink); text-wrap: balance; }
+.meta-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: calc(var(--u) * 16) var(--gut); }
+.meta-row > * { display: block; }
+</style>
+<link rel="stylesheet" href="tokens.css">
+<script type="importmap">{ "imports": { "three": "./assets/vendor/three/three.module.min.js" } }</script>
+</head>
+<body>
+<main class="case">
+
+  <!-- 01 · титул -->
+  <section class="slide s01" aria-labelledby="t01">
+    <div class="main fitbox">
+      <h1 class="title fit" id="t01" data-max="320">Меня можно<br>предсказать на&nbsp;95%</h1>
+    </div>
+    <figure class="shot-fig full" style="--ar: 1920 / 860">
+      <canvas class="shot" data-shot="hero" data-lit="main" role="img" aria-label="Рендер клавиатуры MCHOSE G75 Pro: после «Привет, как д» горят T, J и E"></canvas>
+      <p class="nogl" hidden></p>
+    </figure>
+    <p class="lede l7">Клавиатура подсвечивает три клавиши, которые я, скорее всего, нажму следующими. Ставки делает маленькая языковая модель, обученная на&nbsp;моей переписке. В&nbsp;95,5% случаев следующая буква оказывается среди трёх горящих.</p>
+    <p class="cap r4 end">Рендер в&nbsp;браузере. MCHOSE G75 Pro в&nbsp;расцветке stone black. Набрано «Привет, как&nbsp;д», горят T, J и&nbsp;E.</p>
+  </section>
+
+  <!-- 02 · фраза шрифтом уверенности -->
+  <section class="slide s02" aria-labelledby="t02">
+    <h2 class="head l8" id="t02">Каждая буква набрана по&nbsp;ставке, которую на&nbsp;неё сделала модель</h2>
+    <div class="main fitbox">
+      <p class="cf glyphs fit" id="phrase" data-max="300" role="img" aria-label="«Привет, как дела», каждая буква набрана по ставке модели. Большинство букв получили больше 50%, несколько больше 98%. Самые неожиданные: «к» после «Привет, » около 5% и запятая 12%."></p>
+    </div>
+    <div class="l6 od-stack text">
+      <p class="body">Чем больше модель ставила на&nbsp;букву, тем она шире и&nbsp;жирнее. Низкая ставка даёт узкую и&nbsp;тонкую букву. Ширина и&nbsp;вес растут как p в&nbsp;степени 0,4, по&nbsp;той&nbsp;же кривой, что яркость клавиши.</p>
+      <p class="body dim">Полоска под буквой показывает свет. Зелёная значит, что буква горела первой ставкой, янтарная значит вторую ставку, голубая третью. Тёмная полоска значит, что буква не&nbsp;горела.</p>
+    </div>
+    <div class="r5 end od-stack text">
+      <p class="cf specimen" id="specimen" aria-hidden="true"></p>
+      <p class="cap">Буква «о» при ставке 1%, 5%, 20%, 50% и&nbsp;100%. Ниже реальный прогон: у&nbsp;первой буквы сообщения ставки нет.</p>
+    </div>
+  </section>
+
+  <!-- 03 · макро -->
+  <section class="slide s03" aria-labelledby="t03">
+    <figure class="shot-fig full" style="--ar: 1920 / 1040">
+      <canvas class="shot" data-shot="macro" data-lit="main" role="img" aria-label="Макро-рендер: горят T зелёным, J янтарным и E голубым"></canvas>
+      <p class="nogl" hidden></p>
+    </figure>
+    <div class="l5 od-stack text">
+      <h2 class="head" id="t03">Кириллицы на&nbsp;клавишах нет</h2>
+      <p class="body">Модель ставит на&nbsp;«е», а&nbsp;загорается T: в&nbsp;раскладке ЙЦУКЕН «е» стоит на&nbsp;T. Пробел зажигает пробел. Перенос строки и&nbsp;знаки без своей клавиши пропускаются, и&nbsp;свет достаётся следующей ставке.</p>
+      <p class="cap">Рендер, макро. Фокус на&nbsp;T.</p>
+    </div>
+    <ol class="bets r6 end" id="bets" aria-label="Три ставки после «Привет, как д»"></ol>
+  </section>
+
+  <!-- 04 · цвет и яркость на колпачках -->
+  <section class="slide s04" aria-labelledby="t04">
+    <h2 class="head l8" id="t04">Цвет показывает место ставки. Яркость показывает её&nbsp;размер</h2>
+    <figure class="shot-fig full" style="--ar: 1920 / 900">
+      <canvas class="shot" data-shot="ramp" data-lit="ramp" role="img" aria-label="Рендер трёх буквенных рядов: верхний горит зелёным, средний янтарным, нижний голубым, яркость растёт слева направо"></canvas>
+      <p class="nogl" hidden></p>
+    </figure>
+    <p class="cap l5">Рендер. Верхний ряд горит как первая ставка, средний как вторая, нижний как третья. Слева направо ставка растёт: 0,5%, 2%, 5%, 10%, 20%, 30%, 45%, 60%, 80%, 100%.</p>
+    <div class="r6 od-stack text">
+      <p class="body">Первая версия красила клавишу по&nbsp;уверенности: синий значил «гадаю», белый значил «знаю». Вторая и&nbsp;третья ставки обычно близки по&nbsp;вероятности, и&nbsp;в&nbsp;79% случаев им доставался один оттенок.</p>
+      <p class="body">Теперь у&nbsp;каждого места свой цвет, а&nbsp;яркость растёт как p в&nbsp;степени 0,4. Ставка на&nbsp;46% светит на&nbsp;73%, ставка на&nbsp;6% на&nbsp;33%, и&nbsp;слабая ставка не&nbsp;гаснет совсем.</p>
+      <div class="pairs" role="img" aria-label="Вторая и третья ставки после «Привет, как д»: в старой схеме два почти одинаковых синих, в новой янтарный и голубой">
+        <div class="pair od-stack"><div class="sws" id="was"></div><span class="lab">Было</span></div>
+        <div class="pair od-stack"><div class="sws" id="now"></div><span class="lab">Стало</span></div>
+      </div>
+      <p class="cap">Вторая и&nbsp;третья ставки после «Привет, как&nbsp;д», 9,3% и&nbsp;6,7%.</p>
+    </div>
+  </section>
+
+  <!-- 05 · данные -->
+  <section class="slide s05" aria-labelledby="t05">
+    <h2 class="head l8" id="t05">Сначала общие тексты, потом моя переписка</h2>
+    <div class="main od-stack" style="--od-gap: calc(var(--u) * 28)">
+      <div class="nums">
+        <span class="bignum dim">163&nbsp;млн</span>
+        <span class="bignum r">5,3&nbsp;млн</span>
+      </div>
+      <div class="ticks" id="ticks" role="img" aria-label="168 штрихов по миллиону символов: 163 общих текстов и 5,3 моей переписки, около 3% от всего"></div>
+      <div class="tlabels">
+        <span class="cap">символов общих текстов</span>
+        <span class="cap r">символов моих сообщений, около 3% от&nbsp;всего</span>
+      </div>
+    </div>
+    <div class="l5 od-stack text">
+      <h3 class="h3">Общие тексты</h3>
+      <p class="body">Детские рассказы TinyStories, английская и&nbsp;русская Википедия. На&nbsp;них модель учится языку вообще. 14&nbsp;минут на&nbsp;ноутбуке.</p>
+    </div>
+    <div class="r6 od-stack text">
+      <h3 class="h3">Моя переписка</h3>
+      <p class="body">Мои сообщения из&nbsp;экспорта Телеграма, только мои, по&nbsp;строке на&nbsp;сообщение. Серии из&nbsp;двух и&nbsp;больше цифр заменены на&nbsp;&lt;num&gt;. 26&nbsp;минут дообучения, 8000 шагов.</p>
+    </div>
+    <p class="cap l8">Модель маленькая: 3,4&nbsp;млн параметров, 4&nbsp;слоя, контекст 256&nbsp;знаков, словарь 401&nbsp;знак, включая заглавные и&nbsp;эмодзи. Последний 1% переписки, 53&nbsp;тысячи символов, модель не&nbsp;видела. Вся точность дальше посчитана на&nbsp;нём.</p>
+  </section>
+
+  <!-- 06 · сто нажатий -->
+  <section class="slide s06" aria-labelledby="t06">
+    <div class="l7 od-stack text">
+      <h2 class="head" id="t06">Зелёная клавиша права в&nbsp;9&nbsp;случаях из&nbsp;10</h2>
+      <p class="body">Простая статистика по&nbsp;трём предыдущим буквам уже попадает в&nbsp;тройку в&nbsp;91,6% случаев. Модель поднимает тройку до&nbsp;95,5%. Условием приёмки было плюс 3&nbsp;пункта, вышло 3,9. Главный выигрыш у&nbsp;первой ставки: 90,1% вместо 70,2%.</p>
+    </div>
+    <div class="l5 ucol od-stack">
+      <span class="unum dim">70</span>
+      <div class="ulab od-stack">
+        <span class="h3">Статистика по&nbsp;трём буквам</span>
+        <span class="cap">без нейросети, в&nbsp;тройке 91,6%</span>
+      </div>
+      <div class="units" id="unitsStat" role="img" aria-label="Статистика: из 100 нажатий первая ставка угадала 70, вторая или третья 21, мимо тройки 9"></div>
+    </div>
+    <div class="r6 ucol od-stack">
+      <span class="unum">90</span>
+      <div class="ulab od-stack">
+        <span class="h3">Модель</span>
+        <span class="cap">словарь 401 знак, в&nbsp;тройке 95,5%</span>
+      </div>
+      <div class="units" id="unitsModel" role="img" aria-label="Модель: из 100 нажатий первая ставка угадала 90, вторая или третья 5, мимо тройки 5"></div>
+    </div>
+    <div class="main od-stack" style="--od-gap: calc(var(--u) * 24)">
+      <div class="legend" aria-hidden="true">
+        <span><i class="unit u1"></i>угадала первая ставка</span>
+        <span><i class="unit u23"></i>вторая или третья</span>
+        <span><i class="unit"></i>мимо тройки</span>
+      </div>
+      <p class="cap">100 нажатий на&nbsp;отложенной переписке, доли округлены до&nbsp;целых. Первая версия модели со&nbsp;словарём 136 знаков давала 77,7% и&nbsp;94,8%.</p>
+    </div>
+  </section>
+
+  <!-- 07 · 401 ставка -->
+  <section class="slide s07" aria-labelledby="t07">
+    <div class="l6 od-stack text">
+      <h2 class="head" id="t07">На&nbsp;каждую букву 401&nbsp;ставка. Горят три</h2>
+      <p class="body">После «Привет, как&nbsp;д» три лидера забирают 91,8%. Выше 1% всего пять знаков, выше 0,1% одиннадцать, остальные 390 ниже.</p>
+    </div>
+    <ul class="top3 r4 end" id="top3" aria-label="Три горящие ставки"></ul>
+    <div class="full spectrum" id="spectrum" role="img" aria-label="401 столбик по убыванию ставки. Три горящих: е 75,9%, о 9,3%, у 6,7%. Дальше длинный низкий хвост."></div>
+    <p class="cap l8">Все знаки словаря по&nbsp;убыванию ставки после «Привет, как&nbsp;д». Высота столбика равна яркости, которую получила&nbsp;бы клавиша.</p>
+  </section>
+
+  <!-- 08 · промах -->
+  <section class="slide s08" aria-labelledby="t08">
+    <h2 class="head l8" id="t08">84% на&nbsp;«хорошо». Дальше шла «а»</h2>
+    <div class="l7 fitbox">
+      <div class="bigtype fit" id="missType" data-max="260" role="img" aria-label="Набрано «Сегодня хорош». Ставки: о 83,6%, е 7,1%, и 4,3%. Дальше была а, 2,7%, она не горела.">
+        <p class="cf l1" id="missL1"></p>
+        <p class="cf l2" id="missL2"></p>
+        <span class="caret" aria-hidden="true"></span>
+        <ol class="cands" id="missCands" aria-hidden="true"></ol>
+      </div>
+    </div>
+    <figure class="shot-fig r5" style="--ar: 5 / 4">
+      <canvas class="shot" data-shot="miss" data-lit="miss" role="img" aria-label="Рендер: горят J, T и B, клавиша F нажата"></canvas>
+      <p class="nogl" hidden></p>
+      <figcaption class="cap">Рендер. Горят J, T и&nbsp;B. Нажата F, на&nbsp;ней «а».</figcaption>
+    </figure>
+    <div class="l6 od-stack text">
+      <p class="body">В&nbsp;моей переписке «хорошо» встречается 2218 раз, «хорошая» 78 раз, «хорошая погода» трижды. Модель выучила именно это.</p>
+    </div>
+    <div class="r5 od-stack text">
+      <p class="body dim">«А» оказалась четвёртой ставкой с&nbsp;2,7% и&nbsp;не&nbsp;загорелась. Модель ставит на&nbsp;то, что чаще встречалось в&nbsp;моих сообщениях. Знать, что я&nbsp;напишу дальше, модель не&nbsp;может.</p>
+    </div>
+  </section>
+
+  <!-- 09 · кадр -->
+  <section class="slide s09" aria-labelledby="t09">
+    <div class="l6 od-stack text">
+      <h2 class="head" id="t09">Кадр света занимает 385&nbsp;байт</h2>
+      <p class="body">Протокол нашёлся в&nbsp;исходниках официального веб-драйвера, снифер не&nbsp;понадобился.</p>
+      <p class="body">Канал 0x06 перекрашивает клавиши, но&nbsp;во&nbsp;время печати каждая запись добавляет плавающую задержку. Её&nbsp;чувствуют пальцы, а&nbsp;счётчики не&nbsp;видят.</p>
+    </div>
+    <div class="r5 end od-stack text">
+      <p class="body">Канал 0x08 драйвер использует для эквалайзера под музыку. Кадр ложится в&nbsp;отдельный буфер, и&nbsp;опрос клавиш его не&nbsp;ждёт. 25&nbsp;кадров в&nbsp;секунду, отправка около 12&nbsp;мс.</p>
+    </div>
+    <div class="main dump" id="dump" role="img" aria-label="Байты кадра 0x08 для «Привет, как д»: заголовок 08 00 00 01 00 7A 01 и 126 троек RGB. Горят ячейки 20, 32 и 45."></div>
+    <p class="cap l8">Кадр для «Привет, как&nbsp;д». Заголовок 08 00 00 01 00 7A 01, дальше 126 ячеек по&nbsp;R, G и&nbsp;B. 06 05 09 это фон, 00 00 00 запас прошивки, клавиш там нет. До&nbsp;519 байт отчёт добивается нулями. Горят ячейки 20, 32 и&nbsp;45, это клавиши E, T и&nbsp;J.</p>
+  </section>
+
+  <!-- 10 · одно нажатие на шкале мс -->
+  <section class="slide s10" aria-labelledby="t10">
+    <div class="l7 od-stack text">
+      <h2 class="head" id="t10">Между нажатием и&nbsp;светом</h2>
+      <p class="body">Нажатие перехватывает keytap на&nbsp;Swift раньше приложения. Node-процесс берёт последние 256 знаков, прогоняет модель и&nbsp;собирает кадр из&nbsp;трёх ставок. Модель и&nbsp;свет живут в&nbsp;одном процессе, Python нужен только для обучения.</p>
+    </div>
+    <div class="main lanes" role="img" aria-label="Шкала от 0 до 40 мс. Модель на окне 256 знаков 8,8 мс, на окне 64 знака 2,4 мс. Отправка кадра около 12 мс. Между кадрами 40 мс.">
+      <div class="lane-l od-stack"><span class="v mono">8,8&nbsp;мс</span><span class="n">модель, окно 256 знаков</span></div>
+      <div class="lane-b"><span class="fill" style="--v: 8.8"></span></div>
+      <div class="lane-l od-stack"><span class="v mono">2,4&nbsp;мс</span><span class="n">модель, окно 64 знака</span></div>
+      <div class="lane-b"><span class="fill soft" style="--v: 2.4"></span></div>
+      <div class="lane-l od-stack"><span class="v mono">≈12&nbsp;мс</span><span class="n">отправка кадра по&nbsp;USB</span></div>
+      <div class="lane-b"><span class="fill send" style="--v: 12"></span></div>
+      <div class="lane-l od-stack"><span class="v mono">40&nbsp;мс</span><span class="n">между кадрами, 25 в&nbsp;секунду</span></div>
+      <div class="lane-b"><span class="fill budget" style="--v: 40"></span></div>
+      <div class="axis" aria-hidden="true"><span>0</span><span>10</span><span>20</span><span>30</span><span>40&nbsp;мс</span></div>
+    </div>
+    <p class="chain main">нажатие · keytap · 256 знаков · sft.onnx · три ставки · кадр 0x08 · свет</p>
+    <p class="cap l8">Bluetooth не&nbsp;подходит: пока клавиатура подключена к&nbsp;маку по&nbsp;Bluetooth, macOS держит её&nbsp;сама и&nbsp;сторонний процесс к&nbsp;ней не&nbsp;пускает. Свет работает по&nbsp;проводу и&nbsp;через донгл 2,4&nbsp;ГГц.</p>
+  </section>
+
+  <!-- 11 · коллектор и следующий шаг -->
+  <section class="slide s11" aria-labelledby="t11">
+    <div class="l5 od-stack text">
+      <h2 class="head" id="t11">Дальше модель будет учиться на&nbsp;нажатиях</h2>
+      <p class="body">Каждое нажатие уже оценка. Клавиатура подсветила три клавиши, и&nbsp;нажата одна из&nbsp;них или&nbsp;другая. Из&nbsp;таких событий соберётся дообучение с&nbsp;подкреплением, пачками, а&nbsp;не&nbsp;на&nbsp;каждое нажатие.</p>
+      <p class="body dim">95,5% посчитаны на&nbsp;отложенной переписке. Точность на&nbsp;живой печати с&nbsp;новой моделью ещё предстоит перемерить.</p>
+    </div>
+    <div class="r6 od-stack" style="--od-gap: calc(var(--u) * 24)">
+      <table class="events" id="events">
+        <caption class="cap">Так выглядят события. Шаги из&nbsp;прогона фразы «Мне нужно закончить проект», точка значит пробел.</caption>
+        <thead><tr><th scope="col">контекст</th><th scope="col">горели</th><th scope="col">нажата</th><th scope="col">итог</th></tr></thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </div>
+    <div class="l8 od-stack text">
+      <h3 class="h3">Отдельно пишутся все нажатия</h3>
+      <p class="body">Это кейлоггер, и&nbsp;я&nbsp;обращаюсь с&nbsp;ним как с&nbsp;кейлоггером. Демон под launchd пишет лог только на&nbsp;ноутбук, доступ к&nbsp;файлу есть только у&nbsp;меня. Серии из&nbsp;двух и&nbsp;больше цифр заменяются на&nbsp;&lt;num&gt;, сочетания с&nbsp;Cmd и&nbsp;Ctrl не&nbsp;пишутся, запись ставится на&nbsp;паузу по&nbsp;⌃⌥K. Часть полей с&nbsp;паролями macOS закрывает от&nbsp;перехвата сама.</p>
+    </div>
+  </section>
+
+  <!-- 12 · финал -->
+  <section class="slide s12" aria-labelledby="t12">
+    <figure class="shot-fig full" style="--ar: 1920 / 820">
+      <canvas class="shot" data-shot="end" data-lit="spasibo" role="img" aria-label="Рендер всей клавиатуры с низкого ракурса: горят 1, пробел и 0"></canvas>
+      <p class="nogl" hidden></p>
+    </figure>
+    <div class="l7 fitbox">
+      <div class="bigtype fit" id="endType" data-max="280" role="img" aria-label="Набрано «Спасибо». Ставки: перенос строки 48,8%, восклицательный знак 23,0%, пробел 19,1%, скобка 3,5%.">
+        <p class="cf l1" id="endL1" hidden></p>
+        <p class="cf l2" id="endL2"></p>
+        <span class="caret" aria-hidden="true"></span>
+        <ol class="cands" id="endCands" aria-hidden="true"></ol>
+      </div>
+    </div>
+    <div class="r5 end od-stack text">
+      <h2 class="head" id="t12">48,8% на&nbsp;конец сообщения</h2>
+      <p class="body">После «Спасибо» модель ставит 48,8% на&nbsp;перенос строки, то&nbsp;есть на&nbsp;конец сообщения. Переноса на&nbsp;клавиатуре нет, поэтому горят «!», пробел и&nbsp;скобка.</p>
+      <p class="cap">Рендер. «!» на&nbsp;клавише 1, «)» на&nbsp;клавише 0.</p>
+    </div>
+  </section>
+
+  <!-- 13 · стенд -->
+  <section class="slide s13" aria-labelledby="t13">
+    <div class="l7 od-stack text">
+      <h2 class="head" id="t13">Теперь печатаешь ты</h2>
+      <p class="body">Ниже работает та&nbsp;же модель, что зажигает клавиатуру, только прямо в&nbsp;браузере. Её&nbsp;учили на&nbsp;моей переписке, и&nbsp;ставит она на&nbsp;то, что написал&nbsp;бы&nbsp;я.</p>
+    </div>
+    <p class="cap r4 end">При первом запуске браузер скачает около 24&nbsp;МБ: модель и&nbsp;движок для&nbsp;неё. Окно здесь 64&nbsp;знака вместо 256, по&nbsp;замеру точность та&nbsp;же.</p>
+  </section>
+
+  <!-- живой блок: свой iframe внутри кейса -->
+  <section class="embed" aria-label="Живой блок">
+    <iframe src="stand.html" title="Живой блок: напиши фразу, и клавиатура подсветит три ставки модели" loading="lazy"></iframe>
+  </section>
+
+  <!-- 14 · финальная фраза -->
+  <footer class="slide s14">
+    <div class="main od-stack" style="--od-gap: calc(var(--u) * 48)">
+      <p class="statement">Меня можно предсказать, потому что я&nbsp;повторяюсь.</p>
+      <div class="meta-row">
+        <span class="body">Один человек на&nbsp;весь цикл: реверс протокола, сбор данных, обучение, инференс, свет и&nbsp;этот кейс.</span>
+        <span class="cap mono">Swift · node-hid · PyTorch · ONNX · launchd</span>
+        <span class="cap">MCHOSE G75 Pro · сентябрь 2026</span>
+      </div>
+    </div>
+  </footer>
+
+</main>
+
+<script src="assets/case-data.js"></script>
+<script type="module">
+const D = window.MCHOSE;
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+};
+const comma = s => s.replace(".", ",");
+const pc = p => {
+  const v = p * 100;
+  if (v >= 99.5) return comma(v.toFixed(1)) + "%";
+  if (v >= 10) return Math.round(v) + "%";
+  if (v >= 0.1) return comma(v.toFixed(1)) + "%";
+  return "<0,1%";
+};
+const pc1 = p => comma((p * 100).toFixed(1)) + "%";
+const tOf = p => Math.pow(p, 0.4).toFixed(3);
+const keyName = s => s === D.charSlot[" "] ? "пробел" : (D.keys.find(k => k.s === s) || {}).lg || "";
+const lum = hex => {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+const onColor = hex => lum(hex) > 0.19 ? "var(--color-paper)" : "var(--color-ink)";
+
+// «Спасибо»: прямой прогон sft.onnx. Ставка на каждую букву и четыре лидера после слова; цвета по FAMILY из candle.cjs
+const SPASIBO = {
+  text: "Спасибо",
+  ap: [null, 0.1016, 0.5125, 0.8631, 0.9962, 0.9986, 0.9983],
+  next: [
+    { ch: "\n", p: 0.488 },
+    { ch: "!", p: 0.230, s: 7, c: "#3de07b" },
+    { ch: " ", p: 0.191, s: 35, c: "#ec8e18" },
+    { ch: ")", p: 0.035, s: 61, c: "#004e73" },
+  ],
+};
+SPASIBO.lit = SPASIBO.next.slice(1);
+
+// буква шрифтом уверенности; p = null — ставки не было
+function glyph(ch, p, { bar, label } = {}) {
+  const g = el("span", "g");
+  if (p == null) g.classList.add("nobet");
+  else g.style.setProperty("--t", tOf(p));
+  if (ch === " ") g.classList.add("gap");
+  g.append(el("span", "ch", ch === " " ? " " : ch));
+  if (bar !== undefined) {
+    const b = el("span", "bar");
+    if (bar) b.style.setProperty("--k", bar);
+    g.append(b);
+  }
+  if (label !== undefined) g.append(el("span", "pp", label));
+  return g;
+}
+
+// буквы фразы из записанного прогона: ставка на букву i лежит в шаге i − 1
+function phraseGlyphs(ph, from, to, { bars = false, labels = false } = {}) {
+  const chars = [...ph.text];
+  const out = [];
+  for (let i = from; i < to; i++) {
+    const st = i > 0 ? ph.steps[i - 1] : null;
+    const p = st ? st.ap : null;
+    const opts = {};
+    if (bars) opts.bar = st && st.hit ? st.lit[st.hit - 1].c : null;
+    if (labels) opts.label = p == null ? "—" : pc(p);
+    out.push(glyph(chars[i], p, opts));
+  }
+  return out;
+}
+
+// 02 · фраза и шкала
+const P0 = D.phrases[0];
+$("phrase").append(...phraseGlyphs(P0, 0, [...P0.text].length, { bars: true, labels: true }));
+[0.01, 0.05, 0.2, 0.5, 1].forEach(p => $("specimen").append(glyph("о", p, { label: pc(p) })));
+
+// 03 · три ставки
+D.snap.main.lit.forEach((c, r) => {
+  const li = el("li", "bet");
+  li.style.setProperty("--k", c.c);
+  const sw = el("span", "sw");
+  sw.setAttribute("aria-hidden", "true");
+  const big = el("span", "cf big");
+  big.setAttribute("aria-hidden", "true");
+  big.append(glyph(c.ch, c.p));
+  const meta = el("span", "meta od-stack");
+  meta.append(el("span", "rk", ["Первая", "Вторая", "Третья"][r] + " ставка"), el("span", "kv mono", `«${c.ch}» на ${keyName(c.s)} · ${pc1(c.p)}`));
+  li.append(sw, big, meta);
+  $("bets").append(li);
+});
+
+// 04 · было и стало: старая схема CONF из candle.cjs, цвет по уверенности, яркость по месту
+const CONF = [[0, [8, 16, 60]], [0.25, [0, 80, 200]], [0.45, [0, 180, 210]], [0.62, [40, 220, 110]], [0.8, [235, 200, 40]], [1, [255, 245, 225]]];
+const RANK = [1, 0.7, 0.45];
+const grad = (stops, t) => {
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const [t0, c0] = stops[i - 1], [t1, c1] = stops[i], k = (t - t0) / (t1 - t0);
+      return [0, 1, 2].map(j => c0[j] + (c1[j] - c0[j]) * k);
+    }
+  }
+  return stops[stops.length - 1][1].slice();
+};
+const hex = c => "#" + c.map(v => Math.round(Math.min(255, v)).toString(16).padStart(2, "0")).join("");
+const oldColor = (p, r) => hex(grad(CONF, Math.sqrt(p)).map(v => v * RANK[r]));
+const swk = k => { const s = el("span", "swk"); s.style.setProperty("--k", k); return s; };
+const [, b2, b3] = D.snap.main.lit;
+$("was").append(swk(oldColor(b2.p, 1)), swk(oldColor(b3.p, 2)));
+$("now").append(swk(b2.c), swk(b3.c));
+
+// 05 · штрих = миллион символов
+for (let i = 0; i < 163; i++) $("ticks").append(el("span", "tick"));
+for (let i = 0; i < 5; i++) $("ticks").append(el("span", "tick own"));
+$("ticks").append(el("span", "tick own part"));
+
+// 06 · сто нажатий
+const units = (host, a, b) => { for (let i = 0; i < 100; i++) host.append(el("span", "unit " + (i < a ? "u1" : i < a + b ? "u23" : "u0"))); };
+units($("unitsStat"), 70, 21);
+units($("unitsModel"), 90, 5);
+
+// 07 · спектр и три лидера
+const litMain = new Map(D.snap.main.lit.map(c => [c.ch, c.c]));
+D.snap.main.sorted.forEach(([ch, p]) => {
+  const b = el("span", "sb");
+  b.style.setProperty("--h", Math.max(0.004, Math.pow(p, 0.4)).toFixed(4));
+  const k = litMain.get(ch);
+  if (k) { b.classList.add("lit"); b.style.setProperty("--k", k); }
+  $("spectrum").append(b);
+});
+D.snap.main.lit.forEach(c => {
+  const li = el("li");
+  li.style.setProperty("--k", c.c);
+  const sw = el("span", "sw");
+  const big = el("span", "cf big");
+  big.append(glyph(c.ch, c.p));
+  li.append(sw, big, el("span", "v mono", pc1(c.p)));
+  $("top3").append(li);
+});
+$("top3").append(el("li", "rest", `Остальные 398 знаков делят ${pc1(D.snap.main.stats.rest)}`));
+
+// 08 и 12 · крупный набор: слово, курсор, столбик ставок
+function cand(c, { lab, off = false, got = false }) {
+  const li = el("li", "cand");
+  if (off) li.classList.add("off");
+  if (got) li.classList.add("got");
+  if (c.c) li.style.setProperty("--k", c.c);
+  const g = el("span", "cf");
+  if (c.ch === " ") {
+    const sp = glyph(" ", c.p);
+    sp.firstChild.replaceWith(el("span", "spg"));
+    g.append(sp);
+  } else g.append(glyph(c.ch === "\n" ? "¶" : c.ch, c.p));
+  li.append(el("span", "sw"), g, el("span", "lab", lab));
+  return li;
+}
+
+const P1 = D.phrases[1];
+$("missL1").append(...phraseGlyphs(P1, 0, 7));
+$("missL2").append(...phraseGlyphs(P1, 8, 13));
+D.snap.miss.lit.forEach(c => $("missCands").append(cand(c, { lab: `${pc1(c.p)} · ${keyName(c.s)}` })));
+$("missCands").append(cand({ ch: D.miss.actual, p: D.miss.actualP }, { lab: `${pc1(D.miss.actualP)} · ${keyName(D.charSlot[D.miss.actual])} · нажата`, off: true, got: true }));
+
+[...SPASIBO.text].forEach((ch, i) => $("endL2").append(glyph(ch, SPASIBO.ap[i])));
+SPASIBO.next.forEach(c => $("endCands").append(cand(c, c.ch === "\n"
+  ? { lab: `${pc1(c.p)} · перенос строки, не светится`, off: true }
+  : { lab: `${pc1(c.p)} · ${keyName(c.s)}` })));
+
+// 09 · байты кадра, как их собирает candle.cjs: фон 06 05 09 для слотов < 96, свет поверх
+const hot = new Map(D.snap.main.lit.map(c => [c.s, c.c]));
+const hx = n => n.toString(16).toUpperCase().padStart(2, "0");
+const dump = $("dump");
+const byte = (cls, text, k) => {
+  const s = el("span", cls, text);
+  if (k) { s.style.setProperty("--k", k); s.style.setProperty("--on", onColor(k)); }
+  dump.append(s);
+};
+byte("ix", "hdr");
+byte("hd", [8, 0, 0, 1, 0, 0x7a, 1].map(hx).join(" "));
+for (let s = 0; s < 126; s++) {
+  if (s % 14 === 0) byte("ix", String(s).padStart(3, "0"));
+  const k = hot.get(s);
+  if (k) byte("b hot", [1, 3, 5].map(i => k.slice(i, i + 2).toUpperCase()).join(" "), k);
+  else if (s < 96) byte("b", "06 05 09");
+  else byte("z", "00 00 00");
+}
+
+// 11 · события из записанного прогона
+const P5 = D.phrases[5];
+[9, 10, 11, 12, 13, 22].forEach(n => {
+  const st = P5.steps[n];
+  const tr = el("tr");
+  tr.append(el("td", "ctx", "…" + st.t.slice(-9).replace(/ /g, "·")));
+  const chipsTd = el("td");
+  const chips = el("span", "chips");
+  st.lit.forEach(c => {
+    const k = el("span", "chip");
+    k.style.setProperty("--k", c.c);
+    k.style.setProperty("--on", onColor(c.c));
+    if (c.ch === " ") { k.append(el("span", "spc")); k.setAttribute("aria-label", "пробел"); }
+    else k.textContent = c.ch;
+    chips.append(k);
+  });
+  chipsTd.append(chips);
+  tr.append(chipsTd, el("td", "", st.n === " " ? "·" : st.n));
+  tr.append(el("td", "res" + (st.hit ? "" : " miss"), st.hit ? ["первая", "вторая", "третья"][st.hit - 1] + " ставка" : "мимо тройки"));
+  $("eventsBody").append(tr);
+});
+
+// подгонка крупных строк по ширине колонки: размер в design px, поэтому масштаб окна на неё не влияет
+function fit(node) {
+  const box = node.parentElement;
+  const max = Number(node.dataset.max) || 300;
+  let fs = 100;
+  for (let i = 0; i < 3; i++) {
+    node.style.setProperty("--fs", fs.toFixed(2));
+    const w = node.getBoundingClientRect().width;
+    const avail = box.clientWidth;
+    if (!w || !avail) return;
+    fs = Math.min(max, fs * avail / w);
+  }
+  node.style.setProperty("--fs", fs.toFixed(2));
+}
+const fitAll = () => document.querySelectorAll(".fit").forEach(fit);
+
+// ---- кадры three.js: одна общая сцена рисует их лениво, по мере прокрутки ----
+const RAMP_P = [0.005, 0.02, 0.05, 0.1, 0.2, 0.3, 0.45, 0.6, 0.8, 1];
+const RAMP_ROWS = [
+  [8, 14, 20, 26, 32, 38, 44, 50, 56, 62],
+  [9, 15, 21, 27, 33, 39, 45, 51, 57, 63],
+  [10, 16, 22, 28, 34, 40, 46, 52, 58, 64],
+];
+
+function noGL(canvas, e) {
+  const box = canvas.nextElementSibling;
+  canvas.hidden = true;
+  box.hidden = false;
+  const why = e && e.message ? e.message : String(e);
+  box.replaceChildren(el("span", "nogl-h", "3D-кадр не отрисовался"), el("span", "cap", `${why}. Открой страницу по http в браузере с включённым WebGL.`));
+}
+
+async function renders() {
+  const shots = [...document.querySelectorAll("canvas.shot")];
+  let mod, stills;
+  try {
+    if (location.protocol === "file:") throw new Error("Страница открыта из файла, а модули сцены грузятся только по http");
+    await document.fonts.load('500 26px "Geist"', "EscQWERTY");
+    mod = await import("./assets/js/scene.js");
+    stills = new mod.Stills();
+  } catch (e) {
+    shots.forEach(c => noGL(c, e));
+    return;
+  }
+  const LIT = {
+    main: D.snap.main.lit,
+    miss: D.snap.miss.lit,
+    spasibo: SPASIBO.lit,
+    ramp: RAMP_ROWS.flatMap((row, r) => row.map((s, i) => ({ s, rank: r, p: RAMP_P[i], c: mod.ledColor(r, RAMP_P[i]) }))),
+  };
+  const PRESSED = { miss: D.charSlot[D.miss.actual] };
+  const frame = c => ({ lit: LIT[c.dataset.lit] || [], pressed: PRESSED[c.dataset.lit] ?? null });
+  const DARK = { lit: [], pressed: null };
+  const lightUp = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const played = new WeakSet(lightUp ? [] : shots);
+  const draw = c => stills.render(c, c.dataset.shot, played.has(c) ? frame(c) : DARK).catch(e => noGL(c, e));
+
+  // ступени включения: первая ставка, первые две, все три, потом нажатие
+  const stages = ({ lit, pressed }) => {
+    const rank = (c, i) => c.rank ?? i;
+    const ranks = [...new Set(lit.map(rank))].sort((a, b) => a - b);
+    const out = ranks.map(r => ({ lit: lit.filter((c, i) => rank(c, i) <= r), pressed: null }));
+    if (pressed != null) out.push({ lit, pressed });
+    return out;
+  };
+  const ms = name => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+
+  // слои живут, пока идёт включение; потом кадр перерисовывается целиком, и слои уходят
+  async function play(c) {
+    const steps = stages(frame(c));
+    const layers = steps.map((_, i) => {
+      const l = el("canvas", "layer");
+      l.setAttribute("aria-hidden", "true");
+      l.style.setProperty("--i", i);
+      return l;
+    });
+    c.before(...layers);
+    try {
+      for (let i = 0; i < steps.length; i++) await stills.render(layers[i], c.dataset.shot, steps[i]);
+    } catch (e) {
+      layers.forEach(l => l.remove());
+      noGL(c, e);
+      return;
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => c.parentElement.classList.add("on")));
+    const total = ms("--shot-lead") + ms("--shot-step") * (steps.length - 1) + ms("--shot-fade");
+    setTimeout(async () => {
+      played.add(c);
+      await draw(c);
+      layers.forEach(l => l.remove());
+    }, total + 80);
+  }
+
+  // root: document — внутри чужого iframe отступ без него не работает, и кадры появлялись бы только на экране
+  const io = new IntersectionObserver(entries => entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    io.unobserve(en.target);
+    draw(en.target);
+  }), { root: document, rootMargin: "900px 0px" });
+  shots.forEach(c => io.observe(c));
+  if (lightUp) {
+    const seen = new IntersectionObserver(entries => entries.forEach(en => {
+      if (!en.isIntersecting || en.intersectionRatio < 0.35) return;
+      seen.unobserve(en.target);
+      play(en.target);
+    }), { threshold: 0.4 });
+    shots.forEach(c => seen.observe(c));
+  }
+  let timer, lastW = window.innerWidth;
+  window.addEventListener("resize", () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (window.innerWidth === lastW) return;
+      lastW = window.innerWidth;
+      shots.filter(c => c.dataset.rendered && !c.hidden).forEach(draw);
+    }, 250);
+  });
+}
+
+renders();
+
+await Promise.all([
+  document.fonts.load('800 100px "Science Gothic"', "Привет, как дела 95%"),
+  document.fonts.load('400 20px "Geist Mono"', "0123%"),
+]).catch(() => {});
+await document.fonts.ready;
+fitAll();
+let fitTimer;
+window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitAll, 150); });
+</script>
+</body>
+</html>

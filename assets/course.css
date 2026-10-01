@@ -1,0 +1,102 @@
+/* course.css — общий вид курса mchose: бумага + RGB-акценты клавиатуры */
+:root{
+  --paper:#F4F3EC; --ink:#26241D; --ink-soft:#5B594E; --line:#D9D6C8;
+  --led-r:#C94F3D; --led-g:#4C8A5A; --led-b:#3F6FB0; --hi:#F7EDD8;
+  --ok:#4C8A5A; --bad:#C94F3D;
+  --mono:'JetBrains Mono',monospace; --body:'Golos Text',system-ui,sans-serif; --disp:'Unbounded',sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.65}
+main{max-width:760px;margin:0 auto;padding:56px 24px 96px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.eyebrow .dots{display:flex;gap:4px}
+.eyebrow .dots i{width:8px;height:8px;border-radius:2px}
+.eyebrow .dots i:nth-child(1){background:var(--led-r)}
+.eyebrow .dots i:nth-child(2){background:var(--led-g)}
+.eyebrow .dots i:nth-child(3){background:var(--led-b)}
+
+h1{font:800 clamp(26px,4.4vw,40px)/1.14 var(--disp);margin:0 0 16px;letter-spacing:-.01em}
+.lede{font-size:18.5px;color:var(--ink-soft);max-width:58ch;margin:0 0 34px}
+h2{font:600 clamp(19px,2.8vw,24px)/1.25 var(--disp);margin:52px 0 12px}
+h3{font:600 17px var(--body);margin:26px 0 10px}
+p{max-width:70ch}
+code{font-family:var(--mono);font-size:.88em;background:var(--hi);border:1px solid var(--line);border-radius:5px;padding:1px 5px;white-space:nowrap}
+a{color:var(--led-b)}
+.flow{font-family:var(--mono);font-size:.85em;background:var(--hi);border:1px solid var(--line);border-radius:10px;padding:16px 18px;overflow-x:auto;white-space:pre;line-height:1.7;margin:18px 0}
+
+table{border-collapse:collapse;margin:14px 0;font-size:15px}
+th,td{border:1px solid var(--line);padding:6px 11px;text-align:left}
+th{font:600 12px var(--mono);letter-spacing:.05em;text-transform:uppercase;background:var(--hi)}
+td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
+table.mtx{display:inline-table;margin:6px 18px 6px 0;font-family:var(--mono)}
+table.mtx th{font:600 13px var(--mono);text-transform:none;letter-spacing:0}
+table.mtx td{font-size:13.5px;padding:4px 10px}
+td.hot{background:var(--hi);font-weight:700;box-shadow:inset 0 0 0 2px var(--led-b)}
+
+.win{border:1.5px solid var(--ink);border-radius:12px;background:#fff;padding:14px 18px;margin:26px 0;box-shadow:4px 4px 0 rgba(38,36,29,.08)}
+.win p{margin:0;font-size:15.5px}
+.win .t{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:6px}
+
+.sources{border-top:2px solid var(--ink);margin-top:48px;padding-top:18px;font-size:15px}
+.sources .t{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.ask{border-left:3px solid var(--led-g);padding:2px 0 2px 16px;margin:26px 0;font-size:15.5px}
+.nav{display:flex;justify-content:space-between;font:600 13px var(--mono);margin-top:40px}
+
+.quiz{border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px 18px;margin:22px 0}
+.quiz .q{font-weight:600;margin:0 0 12px}
+.quiz button.a{display:block;width:100%;text-align:left;font:400 15px var(--body);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 13px;margin:6px 0;cursor:pointer;color:var(--ink)}
+.quiz button.a:hover:not(:disabled){border-color:var(--ink)}
+.quiz button.a:focus-visible{outline:2px solid var(--led-b);outline-offset:2px}
+.quiz button.a.right{background:var(--hi);border-color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok)}
+.quiz button.a.wrong{border-color:var(--bad);color:var(--bad)}
+.quiz .fb{margin:10px 0 0;font-size:14.5px;display:none}
+.quiz.done .fb{display:block}
+.quiz .fb.ok{color:var(--ok)}
+.quiz .fb.bad{color:var(--bad)}
+
+.dot-play{border:1.5px solid var(--ink);border-radius:12px;background:#fff;padding:18px 20px;margin:20px 0;box-shadow:4px 4px 0 rgba(38,36,29,.08)}
+.dot-play .vecs{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end}
+.dot-play .v label{display:block;font:600 11px var(--mono);color:var(--ink-soft);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.dot-play input[type=range]{width:150px;accent-color:var(--led-b);display:block}
+.dot-play .res{font:600 20px var(--mono);margin-top:12px}
+.dot-play .res small{font:400 13px var(--body);color:var(--ink-soft);display:block}
+
+/* tok-demo — живой токенизатор (tokenizer-demo.js) */
+.tok-demo{border:1.5px solid var(--ink);border-radius:14px;background:#fff;padding:20px 22px;margin:0 0 44px;box-shadow:5px 5px 0 rgba(38,36,29,.08)}
+.tok-demo label{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.tok-demo input{width:100%;font:400 18px var(--mono);border:none;border-bottom:2px dashed var(--line);background:transparent;padding:10px 2px;color:var(--ink);outline:none}
+.tok-demo input:focus-visible{border-bottom-color:var(--led-b)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;min-height:32px}
+.chip{font:600 13px var(--mono);padding:4px 9px;border-radius:7px;background:var(--hi);border:1px solid var(--line)}
+.chip b{color:var(--led-b);font-weight:600}
+.tok-demo .hint{font:400 12.5px var(--body);color:var(--ink-soft);margin-top:10px}
+
+/* matmul — кликабельное A@B (matmul.js) */
+.matmul{border:1.5px solid var(--ink);border-radius:14px;background:#fff;padding:20px 22px;margin:20px 0;box-shadow:5px 5px 0 rgba(38,36,29,.08)}
+.matmul .stage{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.matmul table{margin:0;font-family:var(--mono);border-collapse:collapse}
+.matmul th{font:600 12px var(--mono);text-transform:none;letter-spacing:0;background:transparent;border:none;padding:2px 8px;color:var(--ink-soft);text-align:center}
+.matmul td{border:1px solid var(--line);background:#fff;font-size:14px;padding:5px 11px;text-align:right;transition:background .15s}
+.matmul td.cell{cursor:pointer}
+.matmul td.cell:hover{background:var(--hi)}
+.matmul td.hl{background:var(--hi);box-shadow:inset 0 0 0 2px var(--led-b);font-weight:700}
+.matmul td.sel{background:var(--hi);box-shadow:inset 0 0 0 2px var(--ink);font-weight:700}
+.matmul .op{font:800 20px var(--disp);color:var(--ink-soft)}
+.mm-shape{font:600 13px var(--mono);color:var(--ink-soft);margin-top:14px}
+.mm-work{font-family:var(--mono);font-size:.88em;background:var(--hi);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-top:12px;white-space:pre;line-height:1.7;overflow-x:auto}
+
+/* полосы вероятностей (общие: урока 0004, демо) */
+.bars{margin:18px 0}
+.bar{display:grid;grid-template-columns:34px 1fr 64px;gap:10px;align-items:center;margin:5px 0;font:600 14px var(--mono)}
+.bar .tr{height:12px;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.bar .fl{height:100%;background:var(--led-g);display:block}
+
+/* temp-play — температура softmax (temp-play.js) */
+.temp-play{border:1.5px solid var(--ink);border-radius:12px;background:#fff;padding:18px 20px;margin:20px 0;box-shadow:4px 4px 0 rgba(38,36,29,.08)}
+.temp-play .head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+.temp-play .head label{font:600 11px var(--mono);color:var(--ink-soft);letter-spacing:.08em;text-transform:uppercase}
+.temp-play .temp-val{font:600 18px var(--mono)}
+.temp-play input[type=range]{width:100%;accent-color:var(--led-b);margin:8px 0 4px}
+.temp-play small{font:400 13px var(--body);color:var(--ink-soft);display:block;margin-bottom:6px}

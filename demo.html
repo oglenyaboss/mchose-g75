@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mchose · нейро-предиктор · live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/course.css">
+<style>
+  .stage{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+  .key{font:600 26px var(--mono);min-width:64px;text-align:center;padding:14px 18px;border-radius:12px;border:2px solid var(--line);background:#fff}
+  .key.r1{border-color:var(--ok);background:#eaf4ec;box-shadow:0 0 18px rgba(76,138,90,.45)}
+  .key.r2,.key.r3{border-color:var(--ok);color:var(--ink-soft)}
+  .key small{display:block;font:600 11px var(--mono);color:var(--ink-soft);margin-top:6px;letter-spacing:.06em}
+  .bars{margin:22px 0}
+  .bar{display:grid;grid-template-columns:34px 1fr 64px;gap:10px;align-items:center;margin:5px 0;font:600 14px var(--mono)}
+  .bar .tr{height:12px;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .bar .fl{height:100%;background:var(--led-g)}
+  .bar.top .fl{background:var(--led-b)}
+  .meta{font:600 12px var(--mono);color:var(--ink-soft);letter-spacing:.05em}
+  .ghost{display:flex;align-items:baseline;gap:10px;margin:6px 0 26px;min-height:30px;flex-wrap:wrap}
+  .nl-toggle{display:flex;align-items:center;gap:8px;margin-top:12px;font:400 13.5px var(--body);color:var(--ink-soft);cursor:pointer;user-select:none}
+  .nl-toggle input{accent-color:var(--led-b);width:15px;height:15px;cursor:pointer}
+  .ghost .gl{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+  .ghost .gc{font:600 22px var(--mono);background:var(--hi);border:1px solid var(--line);border-radius:6px;padding:2px 6px;margin-right:2px}
+  #err{color:var(--bad);font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow" id="eyebrow"><span class="dots"><i></i><i></i><i></i></span> mchose · живой инференс в браузере</div>
+  <h1>Нейро-предиктор: что модель скажет дальше</h1>
+  <p class="lede">Печатай текст — модель на каждом символе пересчитывает ставки на следующую букву. Ровно то, что будет подсвечивать клавиатура: яркая клавиша — ранг 1, тусклые — ранги 2–3.</p>
+
+  <div class="tok-demo">
+    <label for="txt">контекст (последние 256 символов уходят в модель)</label>
+    <input class="tok-in" id="txt" type="text" value="Привет, как дела" autocomplete="off" spellcheck="false">
+    <label class="nl-toggle"><input type="checkbox" id="noenter" checked> не предлагать Enter (маска ⏎ на инференсе — обучению не трогаем)</label>
+    <div class="hint" id="status">грузим модель…</div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="ghost"><span class="gl">призрак · модель допишет сама</span><span id="ghost"></span></div>
+  <div class="bars" id="bars"></div>
+  <p class="meta" id="meta"></p>
+  <p id="err"></p>
+
+  <div class="sources">
+    <p class="t">что это</p>
+    <p><b>?m=sft.onnx</b> — модель после SFT на твоём тексте (val 0.66, top-3 0.95 на отложенном куске телеграма). Без параметра — претрейн mid (val 1.12 на корпусах). ONNX ~13 МБ, onnxruntime-web (wasm), запуск: <code>./demo.sh</code></p>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script type="module">
+  const V = 136, CTX = 256;
+  const txt = document.getElementById('txt');
+  const stage = document.getElementById('stage');
+  const bars = document.getElementById('bars');
+  const meta = document.getElementById('meta');
+  const status = document.getElementById('status');
+  const err = document.getElementById('err');
+  const ghost = document.getElementById('ghost');
+  const show = s => s === ' ' ? '␣' : s === '\n' ? '⏎' : s === '<unk>' ? '∅' : s;
+  const MODEL = new URLSearchParams(location.search).get('m') || 'mid.onnx';
+  let stoi = null, sess = null, timer = null;
+  const noenter = document.getElementById('noenter');
+  noenter.addEventListener('change', () => predict());
+
+
+  let itos = [];
+
+  async function boot() {
+    const vocab = await (await fetch('corpus/vocab.json')).json();
+    stoi = new Map(Object.entries(vocab).map(([c, i]) => [c, +i]));
+    itos = [...stoi.entries()].sort((a, b) => a[1] - b[1]).map(e => e[0]);
+    sess = await ort.InferenceSession.create(MODEL, { executionProviders: ['wasm'] });
+    status.textContent = 'модель готова · печатай';
+    predict();
+  }
+
+  function encode(chars) {
+    const T = chars.length;
+    const ids = BigInt64Array.from(chars.map(c => BigInt(stoi.get(c) ?? 0)));
+    const pos = BigInt64Array.from({ length: T }, (_, i) => BigInt(i));
+    const mask = new Float32Array(T * T);
+    for (let i = 0; i < T; i++) for (let j = 0; j < T; j++) mask[i * T + j] = j <= i ? 0 : -Infinity;
+    return { ids, pos, mask, T };
+  }
+
+  async function forward(chars) {
+    const { ids, pos, mask, T } = encode(chars);
+    const out = await sess.run({
+      ids: new ort.Tensor('int64', ids, [1, T]),
+      pos: new ort.Tensor('int64', pos, [T]),
+      mask: new ort.Tensor('float32', mask, [T, T]),
+    });
+    let row = out.logits.data.subarray((T - 1) * V, T * V);
+    if (noenter.checked && stoi.has('\n')) {
+      row = Float32Array.from(row);
+      row[stoi.get('\n')] = -Infinity;
+    }
+    return row;
+  }
+
+  function probs(row) {
+    const m = Math.max(...row);
+    const ex = Float64Array.from(row, x => Math.exp(x - m));
+    return [ex, ex.reduce((a, b) => a + b, 0)];
+  }
+
+  async function predict() {
+    const text = txt.value.slice(-CTX);
+    if (!sess || !text) { stage.innerHTML = ''; bars.innerHTML = ''; ghost.innerHTML = ''; return; }
+    const t0 = performance.now();
+    const chars = [...text];
+    const [ex, sum] = probs(await forward(chars));
+    const top = [...ex.keys()].sort((a, b) => ex[b] - ex[a]).slice(0, 10);
+    stage.innerHTML = top.slice(0, 3).map((i, r) =>
+      `<div class="key r${r + 1}">${show(itos[i])}<small>${(ex[i] / sum * 100).toFixed(1)}%</small></div>`).join('');
+    bars.innerHTML = top.map(i =>
+      `<div class="bar"><span>${show(itos[i])}</span><span class="tr"><span class="fl" style="width:${(ex[i] / sum * 100).toFixed(1)}%"></span></span><span>${(ex[i] / sum * 100).toFixed(1)}%</span></div>`).join('');
+    meta.textContent = `${MODEL} · контекст ${chars.length} симв · инференс ${(performance.now() - t0).toFixed(0)} мс · wasm`;
+    await genGhost(chars);
+  }
+
+  // призрак: авторегрессия — предсказал букву, дописал её в контекст, прогнал снова
+  async function genGhost(chars) {
+    const ctx = chars.slice(-CTX);
+    const out = [];
+    for (let k = 0; k < 12; k++) {
+      const [ex, sum] = probs(await forward(ctx));
+      let best = 0;
+      for (let i = 1; i < V; i++) if (ex[i] > ex[best]) best = i;
+      const p = ex[best] / sum;
+      out.push({ ch: itos[best], p });
+      ctx.push(itos[best]);
+      if (ctx.length > CTX) ctx.shift();
+    }
+    ghost.innerHTML = out.map(o =>
+      `<span class="gc" style="opacity:${(0.3 + 0.7 * o.p).toFixed(2)}" title="уверенность ${(o.p * 100).toFixed(0)}%">${show(o.ch)}</span>`).join('');
+  }
+
+  txt.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(predict, 120); });
+  boot().catch(e => { err.textContent = 'Не завелось: ' + e.message; status.textContent = 'ошибка'; });
+</script>
+</body>
+</html>

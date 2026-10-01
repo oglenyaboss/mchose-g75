@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Живой блок · MCHOSE G75 Pro и своя языковая модель</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23101418'/%3E%3Crect x='4' y='6' width='8' height='4' rx='1' fill='%233de07b'/%3E%3C/svg%3E">
+<style>
+/* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio.
+   Put this @layer first; product CSS outside the layer always wins. */
+@layer od-layout {
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+
+  /* containers */
+  .od-stack   { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+  .od-row     { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+  .od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+  .od-fill    { flex: 1 1 0; min-width: 0; }
+  .od-fixed   { flex: none; }
+  .od-grid    { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
+
+  /* stacked information: each piece is its own line — never sibling inline spans */
+  .od-stat, .od-field, .od-cell { display: grid; gap: var(--od-gap, 2px); }
+  :where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+  .od-tile { display: grid; grid-template-rows: auto 1fr; }
+  :where(.od-tile) > :where(*) { display: block; }
+
+  /* media keeps its intrinsic ratio by default; never a distorted or cropped
+     cover by accident. height:auto lets the ratio win over an <img height="…">
+     attribute. Cropping to a uniform box is an explicit opt-in: set --od-ratio
+     AND add .od-media-cover together (per the core rule, only where a crop is
+     deliberate — tile thumbs, decorative fills — never on full-frame content). */
+  .od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+  .od-media-cover { object-fit: cover; }
+
+  /* data text only — authored copy is rewritten to its budget instead */
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-clamp-2, .od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .od-clamp-2 { -webkit-line-clamp: 2; }
+  .od-clamp-3 { -webkit-line-clamp: 3; }
+  .od-lines-2 { min-height: calc(2 * 1.4em); }   /* block-level reservation for a shared baseline */
+  .od-nowrap  { white-space: nowrap; }           /* 数字+单位 · 价格+起 · 日期+星期 */
+  .od-keep    { word-break: keep-all; overflow-wrap: anywhere; } /* CJK labels break at spaces / <wbr> first */
+
+  /* screen skeleton (optional): bars take their own space, the middle scrolls — no padding guessed for chrome */
+  .od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+  .od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+
+  /* horizontal rail: the next item peeks at the edge; trailing room survives overflow */
+  .od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+             padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+  .od-rail::-webkit-scrollbar { display: none; }
+  :where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+  :where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
+
+  .od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+  .od-touch  { min-width: 44px; min-height: 44px; }
+}
+/* /OD-LAYOUT-PRIMITIVES v1 */
+
+/* Hallmark · macrostructure: Photographic · live fold: the keyboard is the photograph, UI is annotation
+ * theme: custom (tokens.css) · genre: atmospheric · states: default · hover · focus · active · disabled · loading · error · success */
+
+html, body { margin: 0; background: var(--color-paper); color: var(--color-ink); overflow-x: clip; }
+body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.stand {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto auto minmax(280px, 1fr) auto;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl) var(--space-md);
+}
+
+/* ввод */
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-xl); align-items: end; }
+.field { --od-gap: var(--space-2xs); }
+.field label { font-size: var(--text-sm); color: var(--color-muted); }
+.inrow { --od-gap: var(--space-sm); }
+.input {
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-2xs) 0;
+  font: 500 clamp(22px, 2.4vw, 36px)/1.2 var(--font-mono);
+  color: var(--color-ink);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+  border-radius: 0;
+  caret-color: var(--color-focus);
+}
+.input::placeholder { color: var(--color-muted); }
+.input:focus-visible { outline: 2px solid var(--color-focus); outline-offset: var(--space-2xs); }
+.input:disabled { color: var(--color-muted); cursor: not-allowed; }
+
+.starts { --od-gap: var(--space-2xs); justify-content: flex-end; }
+.starts > span { font-size: var(--text-sm); color: var(--color-muted); margin-right: var(--space-3xs); }
+.chip, .link {
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  font: 500 var(--text-sm)/1 var(--font-body);
+  white-space: nowrap;
+  color: var(--color-ink);
+  background: transparent;
+  border: var(--rule-hair) solid var(--color-rule);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+}
+.link { border-color: transparent; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; color: var(--color-ink-2); }
+.chip:active, .link:active { transform: translateY(1px); }
+.chip:focus-visible, .link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
+.chip:disabled { color: var(--color-muted); cursor: progress; }
+@media (hover: hover) {
+  .chip:hover { border-color: var(--color-ink-2); background: var(--color-paper-2); }
+  .link:hover { color: var(--color-ink); text-decoration-thickness: 2px; }
+}
+
+/* призрак слова: хвост набранного + дописанное моделью шрифтом уверенности */
+.ghost { --od-gap: var(--space-2xs); min-height: calc(clamp(48px, 7vw, 112px) + 24px); }
+.ghost .lab { font-size: var(--text-sm); color: var(--color-muted); }
+.ghost .line { margin: 0; font-size: clamp(48px, 7vw, 112px); line-height: 1; white-space: nowrap; overflow: hidden; }
+.ghost .tail { font-family: var(--font-display); font-stretch: 100%; font-weight: 200; color: var(--color-muted); }
+.ghost .cf { color: var(--color-ink); }
+.ghost .cf > .g { animation: rise var(--dur-short) var(--ease-out) both; }
+.ghost .end { font: 400 var(--text-sm)/1.4 var(--font-body); color: var(--color-muted); margin-left: var(--space-sm); vertical-align: middle; }
+@keyframes rise { from { opacity: 0; transform: translateY(0.08em); } }
+
+/* клавиатура */
+.stage { margin: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-2xs); }
+.stage canvas { display: block; width: 100%; height: 100%; min-height: 0; cursor: grab; touch-action: pan-y; }
+.stage canvas:active { cursor: grabbing; }
+.stage canvas:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.stage figcaption { font-size: var(--text-xs); color: var(--color-muted); }
+.fail { display: grid; place-content: center; padding: var(--space-lg); border: var(--rule-hair) solid var(--color-rule); border-radius: var(--radius-md); color: var(--color-ink-2); max-width: 60ch; justify-self: center; align-self: center; }
+.fail[hidden], .stage canvas[hidden] { display: none; }
+
+/* низ: ставки, спектр, состояние */
+.bottom { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-xl); align-items: end; padding-top: var(--space-sm); border-top: var(--rule-hair) solid var(--color-rule-2); }
+.bets { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(96px, auto)); gap: var(--space-lg); min-height: 96px; align-items: end; }
+.bet { display: grid; grid-template-columns: 10px auto; grid-template-rows: auto auto auto; column-gap: var(--space-xs); row-gap: var(--space-3xs); }
+.bet .dot { grid-row: 1 / 4; width: 10px; align-self: stretch; border-radius: 2px; background: var(--k); }
+.bet .glyph { font-size: 56px; line-height: 1; min-height: 56px; }
+.bet .glyph .g.space { display: inline-block; width: 0.8em; height: 0.28em; border: 0.08em solid currentColor; border-top: 0; }
+.bet .key { font-size: var(--text-xs); color: var(--color-muted); white-space: nowrap; }
+.bet .pc { font: 500 var(--text-md)/1 var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bets .empty { grid-column: 1 / -1; color: var(--color-muted); font-size: var(--text-sm); align-self: center; }
+
+.spec { --od-gap: var(--space-2xs); min-width: 0; }
+.spec canvas { display: block; width: 100%; height: 72px; }
+.spec .lab { font-size: var(--text-xs); color: var(--color-muted); }
+
+.status { --od-gap: var(--space-2xs); min-width: 200px; text-align: right; }
+.status .st { font: 500 var(--text-sm)/1.4 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-ink-2); white-space: nowrap; }
+.status .sub { font-size: var(--text-xs); color: var(--color-muted); }
+.status progress { appearance: none; -webkit-appearance: none; width: 100%; height: 2px; border: 0; background: var(--color-rule); }
+.status progress::-webkit-progress-bar { background: var(--color-rule); }
+.status progress::-webkit-progress-value { background: var(--color-ink); }
+.status progress::-moz-progress-bar { background: var(--color-ink); }
+.status progress[hidden] { display: none; }
+.status .err { color: var(--color-ink); white-space: normal; text-align: left; max-width: 44ch; }
+
+@media (max-width: 899px) {
+  .stand { padding: var(--space-md) var(--space-sm); grid-template-rows: auto auto auto auto; }
+  .top { grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); }
+  .starts { justify-content: flex-start; }
+  .stage canvas { height: auto; aspect-ratio: 16 / 10; }
+  .bottom { grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+  .status { text-align: left; min-width: 0; }
+  .bets { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-sm); }
+  .bet .glyph { font-size: 44px; min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost .cf > .g { animation: none; }
+  .chip, .link { transition: none; }
+  .chip:active, .link:active { transform: none; }
+}
+</style>
+<link rel="stylesheet" href="tokens.css">
+<script type="importmap">{ "imports": { "three": "./assets/vendor/three/three.module.min.js" } }</script>
+</head>
+<body>
+<main class="stand" aria-labelledby="stand-title">
+  <h1 class="vh" id="stand-title">Живой блок: клавиатура подсвечивает три ставки своей языковой модели</h1>
+
+  <div class="top">
+    <div class="field od-field">
+      <label for="txt">Напиши что-нибудь. Клавиатура подсветит три ставки на следующую букву</label>
+      <div class="inrow od-row">
+        <input class="input od-fill" id="txt" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="240" placeholder="Привет, как д">
+        <button class="link od-fixed" id="clear" type="button">Очистить</button>
+      </div>
+    </div>
+    <div class="starts od-cluster" role="group" aria-label="Начать с фразы">
+      <span>или</span>
+      <button class="chip" type="button" data-phrase="Привет, как д">Привет, как д</button>
+      <button class="chip" type="button" data-phrase="Сегодня хорош">Сегодня хорош</button>
+      <button class="chip" type="button" data-phrase="Спасибо">Спасибо</button>
+    </div>
+  </div>
+
+  <div class="ghost od-stack" aria-live="polite">
+    <span class="lab">Модель дописывает слово</span>
+    <p class="line" id="ghost"><span class="tail">—</span></p>
+  </div>
+
+  <figure class="stage">
+    <canvas id="board" tabindex="0" aria-label="3D-клавиатура MCHOSE G75 Pro. Потяни, чтобы повернуть"></canvas>
+    <p class="fail" id="boardFail" hidden></p>
+    <figcaption>Рендер в браузере по геометрии клавиш из драйвера. Цвет и яркость — тот же кадр, что уходит в клавиатуру.</figcaption>
+  </figure>
+
+  <div class="bottom">
+    <ol class="bets" id="bets" aria-label="Три ставки на следующую букву">
+      <li class="empty">Начни печатать или выбери фразу</li>
+    </ol>
+    <div class="spec od-stack">
+      <canvas id="spec" role="img" aria-label="Все 401 ставка модели по убыванию"></canvas>
+      <span class="lab" id="specLab">Все 401 ставка по убыванию. Высота — яркость, которую получила бы клавиша</span>
+    </div>
+    <div class="status od-stack" role="status">
+      <span class="st" id="st">Загружаю модель</span>
+      <progress id="prog" max="1" value="0"></progress>
+      <span class="sub" id="sub">sft.onnx · 3,4 млн параметров · окно 64 знака</span>
+    </div>
+  </div>
+</main>
+
+<script src="assets/case-data.js"></script>
+<script type="module">
+import { LiveView, ledColor } from "./assets/js/scene.js";
+import { loadModel, TOTAL_BYTES } from "./assets/js/model.js";
+
+const D = window.MCHOSE;
+const $ = id => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const mb = n => (n / 1048576).toFixed(1).replace(".", ",");
+const pct = p => { const v = p * 100; return v < 0.1 ? "<0,1%" : (v >= 10 ? Math.round(v) : v.toFixed(1).replace(".", ",")) + "%"; };
+const keyName = s => { const k = D.keys.find(x => x.s === s); return k ? (k.s === 35 ? "пробел" : k.lg || k.n) : ""; };
+const slotOf = ch => D.charSlot[ch] ?? D.charSlot[ch.toLowerCase()];
+
+let view = null, model = null, seq = 0, prev = "", timer = null, typing = null;
+
+// ---- 3D ----
+try {
+  await document.fonts.load('500 26px "Geist"');
+  view = new LiveView($("board"), { reduced });
+} catch (e) {
+  $("board").hidden = true;
+  const f = $("boardFail");
+  f.hidden = false;
+  f.textContent = "3D не запустился: " + (e && e.message ? e.message : e) + ". Включи аппаратное ускорение в браузере — ставки ниже работают и без него.";
+}
+
+// ---- модель ----
+const st = $("st"), prog = $("prog"), sub = $("sub");
+function fail(msg) {
+  prog.hidden = true;
+  st.classList.add("err");
+  st.textContent = msg;
+  document.querySelectorAll(".chip").forEach(b => { b.disabled = false; });
+}
+if (location.protocol === "file:") {
+  fail("Модель не загрузится из файла: браузер не отдаёт её странице. Открой блок по http или https.");
+} else {
+  loadModel(({ stage, loaded, total }) => {
+    prog.max = total;
+    prog.value = loaded;
+    st.textContent = stage === "init" ? "Запускаю модель" : `Загружаю модель · ${mb(loaded)} из ${mb(total)} МБ`;
+  }).then(m => {
+    model = m;
+    prog.hidden = true;
+    st.textContent = "Модель готова";
+    predict();
+  }).catch(e => fail("Модель не загрузилась: " + (e && e.message ? e.message : e) + ". Обнови страницу."));
+}
+st.textContent = location.protocol === "file:" ? st.textContent : `Загружаю модель · 0 из ${mb(TOTAL_BYTES)} МБ`;
+
+// ---- отрисовка ----
+function glyphs(el, list) {
+  el.replaceChildren();
+  el.className = "cf";
+  for (const { ch, p } of list) {
+    const g = document.createElement("span");
+    g.className = "g";
+    g.style.setProperty("--t", Math.pow(p, 0.4).toFixed(3));
+    if (ch === " ") g.classList.add("space");
+    else g.textContent = ch;
+    el.appendChild(g);
+  }
+  return el;
+}
+
+function renderBets(cands) {
+  const ol = $("bets");
+  ol.replaceChildren();
+  if (!cands.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = "Начни печатать или выбери фразу";
+    ol.appendChild(li);
+    return;
+  }
+  cands.forEach((c, r) => {
+    const li = document.createElement("li");
+    li.className = "bet";
+    li.style.setProperty("--k", c.c);
+    const dot = document.createElement("span"); dot.className = "dot"; dot.setAttribute("aria-hidden", "true");
+    const glyph = glyphs(document.createElement("span"), [c]); glyph.classList.add("glyph");
+    const key = document.createElement("span"); key.className = "key";
+    key.textContent = `${["первая", "вторая", "третья"][r]} · ${c.ch === " " ? "пробел" : "клавиша " + keyName(c.s)}`;
+    const pc = document.createElement("span"); pc.className = "pc"; pc.textContent = pct(c.p);
+    li.append(dot, glyph, key, pc);
+    li.setAttribute("aria-label", `${r + 1}-я ставка: ${c.ch === " " ? "пробел" : c.ch}, ${pct(c.p)}, клавиша ${keyName(c.s)}`);
+    ol.appendChild(li);
+  });
+}
+
+function renderSpectrum(sorted, cands) {
+  const cv = $("spec");
+  const r = cv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.max(1, Math.round(r.width * dpr));
+  cv.height = Math.max(1, Math.round(r.height * dpr));
+  const ctx = cv.getContext("2d");
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  const n = sorted.length, bw = cv.width / n;
+  const lit = new Map(cands.map(c => [c.ch, c.c]));
+  ctx.fillStyle = css("--color-rule");
+  ctx.fillRect(0, cv.height - dpr, cv.width, dpr);
+  sorted.forEach(([ch, p], i) => {
+    const h = Math.max(dpr, Math.pow(p, 0.4) * (cv.height - 2 * dpr));
+    ctx.fillStyle = lit.get(ch) || css("--color-ink-2");
+    ctx.globalAlpha = lit.has(ch) ? 1 : 0.55;
+    ctx.fillRect(i * bw, cv.height - h, Math.max(1, bw - (bw > 3 ? 1 : 0)), h);
+  });
+  ctx.globalAlpha = 1;
+  const top3 = cands.reduce((a, c) => a + c.p, 0);
+  cv.setAttribute("aria-label", `Все ${n} ставок по убыванию. Три горящие вместе: ${pct(top3)}`);
+}
+
+function renderGhost(chars, g) {
+  const line = $("ghost");
+  line.replaceChildren();
+  const text = chars.join("");
+  const tail = text.slice(text.lastIndexOf(" ") + 1).slice(-10);
+  const t = document.createElement("span");
+  t.className = "tail";
+  t.textContent = tail;
+  line.appendChild(t);
+  if (g.length) line.appendChild(glyphs(document.createElement("span"), g));
+  else {
+    const e = document.createElement("span");
+    e.className = "end";
+    e.textContent = tail ? "модель ставит на конец слова" : "модель ставит на новое слово";
+    line.appendChild(e);
+  }
+}
+
+function clearAll() {
+  if (view) view.setLit([]);
+  renderBets([]);
+  $("ghost").replaceChildren(Object.assign(document.createElement("span"), { className: "tail", textContent: "—" }));
+  const cv = $("spec");
+  cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+}
+
+async function predict() {
+  const my = ++seq;
+  const chars = [...$("txt").value];
+  if (!chars.length) { clearAll(); return; }
+  if (!model) return;
+  let res;
+  try { res = await model.next(chars); } catch (e) { fail("Модель сбилась: " + e.message); return; }
+  if (my !== seq) return;
+  const cands = model.candidates(res.p, D.charSlot).map((c, r) => ({ ...c, c: ledColor(r, c.p) }));
+  if (view) view.setLit(cands);
+  renderBets(cands);
+  renderSpectrum(model.sorted(res.p), cands);
+  st.textContent = `${Math.max(1, Math.round(res.ms))} мс на букву`;
+  sub.textContent = "sft.onnx в браузере · 3,4 млн параметров · окно 64 знака";
+  const g = await model.ghost(chars, () => my !== seq).catch(() => null);
+  if (g && my === seq) renderGhost(chars, g);
+}
+
+function schedule() { clearTimeout(timer); timer = setTimeout(predict, 40); }
+
+$("txt").addEventListener("input", () => {
+  const now = $("txt").value;
+  if (now.length > prev.length && now.startsWith(prev) && view) {
+    const s = slotOf([...now].pop());
+    if (s != null) view.press(s);
+  }
+  prev = now;
+  schedule();
+});
+
+$("clear").addEventListener("click", () => {
+  clearInterval(typing);
+  $("txt").value = "";
+  prev = "";
+  seq++;
+  clearAll();
+  $("txt").focus();
+});
+
+document.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
+  clearInterval(typing);
+  const phrase = [...b.dataset.phrase];
+  const input = $("txt");
+  input.value = "";
+  prev = "";
+  if (reduced) {
+    input.value = phrase.join("");
+    prev = input.value;
+    schedule();
+    input.focus();
+    return;
+  }
+  let i = 0;
+  typing = setInterval(() => {
+    input.value += phrase[i];
+    input.dispatchEvent(new Event("input"));
+    if (++i >= phrase.length) { clearInterval(typing); input.focus(); }
+  }, 90);
+}));
+
+new ResizeObserver(() => { if (model && $("txt").value) predict(); }).observe($("spec"));
+</script>
+</body>
+</html>

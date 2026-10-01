@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mchose G75 Pro · свечка на клавиатуре</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/course.css">
+<style>
+  main.wide{max-width:1180px}
+  h1{margin-bottom:10px}
+  .lede{margin-bottom:20px}
+
+  /* --- сцена: тёмный стол, доска в лёгкой перспективе --- */
+  .stage{position:relative;padding:26px 30px 34px;border-radius:22px;overflow:hidden;
+    background:radial-gradient(120% 100% at 50% -10%,#2b2733 0%,#15141a 58%,#0b0a0e 100%);
+    box-shadow:inset 0 0 90px rgba(0,0,0,.8),0 30px 70px -26px rgba(20,18,25,.65);perspective:1500px}
+  .shadow{position:absolute;left:8%;right:8%;bottom:12px;height:60px;border-radius:50%;
+    background:radial-gradient(closest-side,rgba(0,0,0,.75),transparent);filter:blur(14px)}
+  .board{position:relative;transform:rotateX(var(--rx,13deg)) rotateZ(var(--rz,0deg));transform-style:preserve-3d;
+    cursor:grab}
+  .board:active{cursor:grabbing}
+  .board img{display:block;width:100%;user-select:none;-webkit-user-drag:none;
+    filter:drop-shadow(0 18px 26px rgba(0,0,0,.55))}
+  .glow{position:absolute;inset:0;pointer-events:none}
+  .glow i{position:absolute;border-radius:50%;mix-blend-mode:screen;opacity:0;
+    background:radial-gradient(ellipse at 50% 44%,color-mix(in srgb,var(--c,#000) 95%,transparent) 0%,
+      color-mix(in srgb,var(--c,#000) 55%,transparent) 52%,transparent 76%);
+    transition:opacity .08s linear}
+  .glow i.halo{background:radial-gradient(ellipse at 50% 50%,color-mix(in srgb,var(--c,#000) 45%,transparent) 0%,transparent 68%)}
+  .glow i.hit{filter:brightness(1.35)}
+  .ring{position:absolute;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px var(--cc),0 0 22px var(--cc);
+    animation:ring 1.1s ease-in-out infinite}
+  @keyframes ring{50%{box-shadow:0 0 0 3px var(--cc),0 0 30px var(--cc)}}
+  .rip{position:absolute;border-radius:50%;border:2px solid rgba(190,230,255,.9);pointer-events:none;
+    animation:rip .5s ease-out forwards}
+  @keyframes rip{from{transform:scale(.55);opacity:.95}to{transform:scale(1.5);opacity:0}}
+
+  .palette{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:22px}
+  .palette .lbl{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-right:4px}
+  .palette button{width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0;
+    background-size:cover;background-position:center;filter:saturate(.95)}
+  .palette button.on{outline:2px solid #fff;outline-offset:2px}
+  .palette button:focus-visible{outline:2px solid var(--led-b);outline-offset:2px}
+
+  /* --- панель: кандидаты, сессия, лог --- */
+  .panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:22px}
+  .card{border:1.5px solid var(--ink);border-radius:14px;background:#fff;box-shadow:5px 5px 0 rgba(38,36,29,.08);padding:14px 16px}
+  .card .t{font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .cands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .cand-chip{border:2px solid var(--line);border-radius:10px;padding:8px 6px 6px;text-align:center;background:var(--paper)}
+  .cand-chip .ch{font:600 26px var(--mono);display:block;line-height:1.1}
+  .cand-chip .p{font:600 11px var(--mono);color:var(--ink-soft)}
+  .cand-chip .r{font:600 10px var(--mono);letter-spacing:.08em;color:var(--ink-soft);display:block;margin-top:2px}
+  .ctx{font:400 13.5px/1.5 var(--mono);margin-top:10px;word-break:break-all;max-height:62px;overflow:hidden;color:var(--ink)}
+  .ctx b{font-weight:600}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;margin-top:10px;font:600 12.5px var(--mono)}
+  .stats span{color:var(--ink-soft);font-weight:400}
+  .feed{list-style:none;margin:10px 0 0;padding:0;font:400 12.5px/1.45 var(--mono)}
+  .feed li{padding:3px 0;border-top:1px dashed var(--line);display:flex;gap:6px;align-items:baseline}
+  .feed li:first-child{border-top:none}
+  .feed .tail{color:var(--ink-soft);flex:1;overflow:hidden;white-space:nowrap}
+  .feed .mark{font-weight:600}
+  .feed .hit1{color:var(--ok)}.feed .hit3{color:#B07A1E}.feed .miss{color:var(--bad)}
+  .feed .ch{font-weight:600}
+  #net{font:600 12px var(--mono);letter-spacing:.05em}
+  #net.on{color:var(--ok)}#net.off{color:var(--bad)}
+</style>
+</head>
+<body>
+<main class="wide">
+  <div class="eyebrow"><span class="dots"><i></i><i></i><i></i></span> mchose G75 Pro · зеркало подсветки</div>
+  <h1>Свечка: модель подсказывает следующую букву</h1>
+  <p class="lede">Разрешение снято с драйвера MCHOSE: доска, расцветки и легенды — из его картинок, положение клавиш вымерено по фото. Цвет каждой клавиши — кадр канала 0x08 ровно таким, каким уходит в железо: что горит на столе, то и здесь. Зелёная/янтарная/циановая — кандидат модели, голубая вспышка — нажатие.</p>
+
+  <section class="stage" id="stage">
+    <div class="shadow"></div>
+    <div class="board" id="board">
+      <img id="photo" src="assets/photos/full/iceBlue.png" alt="MCHOSE G75 Pro">
+      <div class="glow" id="glow"></div>
+    </div>
+    <div class="palette" id="palette"><span class="lbl">расцветка</span></div>
+  </section>
+
+  <section class="panel">
+    <div class="card">
+      <span class="t" id="cands-title">ставки модели на следующую букву</span>
+      <div class="cands" id="cands"></div>
+      <div class="ctx" id="ctx">жду нажатий…</div>
+    </div>
+    <div class="card">
+      <span class="t">сессия</span>
+      <div class="stats" id="stats"></div>
+      <div id="net" style="margin-top:12px">подключаюсь…</div>
+    </div>
+    <div class="card">
+      <span class="t">лог · попадания в топ-3</span>
+      <ol class="feed" id="feed"></ol>
+    </div>
+  </section>
+</main>
+<script>
+// расцветки G75 Pro — картинки самого драйвера (cdn.mchose.com.cn), с прозрачным фоном
+const COLORS = [
+  ['iceBlue', 'лёд'], ['pureBlue', 'синий'], ['bluenessWhite', 'бело-синий'], ['northSnow', 'северный снег'],
+  ['whiteLine', 'белая линия'], ['stoneBlack', 'камень'], ['blackLine', 'чёрная линия'],
+  ['redFog', 'красный туман'], ['forestGreen', 'лес'], ['darkPurple', 'фиолет'], ['darkPink', 'розовый'],
+];
+const board = document.getElementById('board');
+const glow = document.getElementById('glow');
+const photo = document.getElementById('photo');
+const palette = document.getElementById('palette');
+const candsEl = document.getElementById('cands');
+const ctxEl = document.getElementById('ctx');
+const statsEl = document.getElementById('stats');
+const feedEl = document.getElementById('feed');
+const netEl = document.getElementById('net');
+
+const show = c => c === ' ' ? '␣' : c === '\n' ? '⏎' : c;
+const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const rgbHex = (r, g, b) => '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+
+// --- слой свечения: по блобу на клавишу, координаты из калибровки по фото ---
+let KEYS = [];                    // [{slot, name, x0,x1,y0,y1, cap, halo}]
+const applied = new Map();        // slot -> {hex, op}
+
+function build() {
+  glow.innerHTML = '';
+  for (const k of KEYS) {
+    const w = (k.x1 - k.x0), h = (k.y1 - k.y0);
+    const cap = document.createElement('i');
+    cap.className = 'cap';
+    cap.style.cssText = `left:${(k.x0 - w * .10) * 100}%;top:${(k.y0 - h * .10) * 100}%;` +
+      `width:${w * 1.20 * 100}%;height:${h * 1.20 * 100}%`;
+    const halo = document.createElement('i');
+    halo.className = 'halo';
+    halo.style.cssText = `left:${(k.x0 - w * .45) * 100}%;top:${(k.y0 - h * .40) * 100}%;` +
+      `width:${w * 1.90 * 100}%;height:${h * 1.80 * 100}%`;
+    glow.append(cap, halo);
+    k.cap = cap; k.halo = halo; k.w = w; k.h = h;
+  }
+}
+
+// --- кадр подсветки: 378 байт RGB (126 слотов), как ушёл в железо ---
+const frame = new Uint8Array(378);
+function applyFrame(b64) {
+  const bin = atob(b64);
+  for (let i = 0; i < 378; i++) frame[i] = bin.charCodeAt(i);
+  for (const k of KEYS) {
+    const r = frame[k.slot * 3], g = frame[k.slot * 3 + 1], b = frame[k.slot * 3 + 2];
+    const mx = Math.max(r, g, b);
+    const op = mx < 26 ? 0 : Math.round(Math.pow(mx / 255, .85) * 20) / 20;   // квантуем, чтобы не дёргать стили
+    const st = applied.get(k.slot);
+    if (st && st.op === op && (op === 0 || st.hex === rgbHex(r, g, b))) continue;
+    const hex = rgbHex(r, g, b);
+    if (op === 0) {
+      k.cap.style.opacity = 0; k.halo.style.opacity = 0;
+      applied.set(k.slot, { hex, op: 0 });
+      continue;
+    }
+    if (!st || st.hex !== hex) {
+      k.cap.style.setProperty('--c', hex);
+      k.halo.style.setProperty('--c', hex);
+    }
+    k.cap.style.opacity = op;
+    k.halo.style.opacity = (op * .45).toFixed(2);
+    applied.set(k.slot, { hex, op });
+  }
+}
+
+// --- нажатие: вспышка + расходящееся кольцо ---
+function press(slot) {
+  const k = KEYS.find(x => x.slot === slot);
+  if (!k) return;
+  k.cap.classList.add('hit');
+  setTimeout(() => k.cap.classList.remove('hit'), 130);
+  const rip = document.createElement('div');
+  const w = k.w, h = k.h;
+  rip.className = 'rip';
+  rip.style.cssText = `left:${(k.x0 - w * .12) * 100}%;top:${(k.y0 - h * .12) * 100}%;` +
+    `width:${w * 1.24 * 100}%;height:${h * 1.24 * 100}%`;
+  glow.append(rip);
+  setTimeout(() => rip.remove(), 520);
+}
+
+// --- лог предикта ---
+const hist = [];
+let hit1 = 0, hit3 = 0, total = 0, lastKeyAt = 0, keys = [], wpm = 0, inferMs = 0, layout = 'en';
+
+function statsHtml() {
+  const pc = n => total ? (n / total * 100).toFixed(0) + '%' : '—';
+  statsEl.innerHTML = [
+    ['нажатий', keys.length], ['симв/мин', wpm], ['инференс', inferMs.toFixed(1) + ' мс'],
+    ['раскладка', layout.toUpperCase()], ['в топ-1', `${hit1} · ${pc(hit1)}`], ['в топ-3', `${hit3 + hit1} · ${pc(hit3 + hit1)}`],
+  ].map(([t, v]) => `<div><span>${t}</span> ${v}</div>`).join('');
+}
+function feedHtml() {
+  feedEl.innerHTML = hist.slice(-8).reverse().map(h => {
+    const mark = h.rank === 0 ? ['hit1', '✓ топ-1'] : h.rank > 0 ? ['hit3', `✓ топ-${h.rank + 1}`] : ['miss', '✗ мимо'];
+    return `<li><span class="tail">${esc(h.tail)}</span><span class="ch">${h.typed === undefined ? '' : esc(show(h.typed))}</span>` +
+      `<span class="mark ${h.typed === undefined ? '' : mark[0]}">${h.typed === undefined ? '' : mark[1]}</span></li>`;
+  }).join('');
+}
+statsHtml();
+
+let rings = [];
+function onPred(p) {
+  inferMs = p.ms; layout = p.layout;
+  candsEl.innerHTML = p.cands.map(c => `<div class="cand-chip" style="border-color:${c.hex}">
+      <span class="ch">${esc(show(c.ch))}</span><span class="p">${(c.p * 100).toFixed(1)}%</span>
+      <span class="r">ранг ${c.rank + 1}</span></div>`).join('');
+  const chars = [...p.ctx];
+  ctxEl.innerHTML = (chars.slice(-90).map(esc).join('') || 'контекст пуст') + '<b>▌</b>';
+  document.getElementById('cands-title').textContent = `ставки модели · контекст ${chars.length} симв`;
+
+  for (const r of rings) r.remove();                       // кольца кандидатов живут до нового прогноза
+  rings = p.cands.map(c => {
+    const k = KEYS.find(x => x.slot === c.slot);
+    if (!k) return null;
+    const el = document.createElement('div');
+    el.className = 'ring';
+    el.style.cssText = `--cc:${c.hex};left:${(k.x0 - k.w * .14) * 100}%;top:${(k.y0 - k.h * .14) * 100}%;` +
+      `width:${k.w * 1.28 * 100}%;height:${k.h * 1.28 * 100}%`;
+    glow.append(el);
+    return el;
+  }).filter(Boolean);
+
+  hist.push({ cands: p.cands, tail: chars.slice(-20).join('') });
+  if (hist.length > 40) hist.shift();
+  feedHtml(); statsHtml();
+}
+function onKey(k) {
+  if (k.slot !== null) press(k.slot);
+  if (k.mod & 3 || !k.ch) return;
+  const now = Date.now();
+  lastKeyAt = now;
+  keys.push(now);
+  keys = keys.filter(t => now - t < 13000);
+  const span = (now - keys[0]) / 60000;
+  wpm = span > 0.05 ? Math.round(keys.length / 5 / span) : 0;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (hist[i].typed !== undefined) continue;
+    const rank = hist[i].cands.findIndex(c => c.ch === k.ch);
+    hist[i].typed = k.ch; hist[i].rank = rank;
+    total++;
+    if (rank === 0) hit1++; else if (rank > 0) hit3++;
+    break;
+  }
+  feedHtml(); statsHtml();
+}
+
+// --- расцветка: меняем картинку и маску свечения (чтобы свет не вылезал за корпус) ---
+function setColor(key, name) {
+  const url = `assets/photos/full/${key}.png`;
+  photo.src = url;
+  board.style.webkitMaskImage = board.style.maskImage = `url("${url}")`;
+  board.style.webkitMaskSize = board.style.maskSize = '100% 100%';
+  photo.alt = `MCHOSE G75 Pro · ${name}`;
+  for (const b of palette.querySelectorAll('button')) b.classList.toggle('on', b.dataset.k === key);
+  localStorage.setItem('mchose-color', key);
+}
+for (const [key, name] of COLORS) {
+  const b = document.createElement('button');
+  b.dataset.k = key;
+  b.title = name;
+  b.style.backgroundImage = `url(assets/photos/full/${key}.png)`;
+  b.onclick = () => setColor(key, name);
+  palette.append(b);
+}
+setColor(localStorage.getItem('mchose-color') || 'iceBlue', '');
+
+// --- наклон мышью: 2.5D ---
+let drag = null;
+board.addEventListener('pointerdown', e => {
+  drag = { x: e.clientX, y: e.clientY, rx: parseFloat(getComputedStyle(board).getPropertyValue('--rx')) || 13, rz: 0 };
+  board.setPointerCapture(e.pointerId);
+});
+board.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const rx = Math.max(0, Math.min(58, drag.rx + (e.clientY - drag.y) * .25));
+  const rz = Math.max(-14, Math.min(14, drag.rz + (e.clientX - drag.x) * .05));
+  board.style.setProperty('--rx', rx + 'deg');
+  board.style.setProperty('--rz', rz + 'deg');
+});
+board.addEventListener('pointerup', () => drag = null);
+board.addEventListener('pointercancel', () => drag = null);
+
+// --- канал ---
+const es = new EventSource('/events');
+es.onopen = () => { netEl.className = 'on'; netEl.textContent = 'связь есть · 25 кадров/с'; };
+es.onerror = () => { netEl.className = 'off'; netEl.textContent = 'нет связи · запусти node candle.cjs --mirror'; };
+es.addEventListener('hello', e => {
+  const h = JSON.parse(e.data);
+  netEl.textContent = `модель ${h.model} · ${h.fps} кадров/с`;
+});
+es.addEventListener('f', e => applyFrame(JSON.parse(e.data).d));
+es.addEventListener('k', e => onKey(JSON.parse(e.data)));
+es.addEventListener('p', e => onPred(JSON.parse(e.data)));
+
+setInterval(() => {                                  // перестал печатать — скорость гаснет
+  if (Date.now() - lastKeyAt < 1500 || !wpm) return;
+  wpm = 0; statsHtml();
+}, 1000);
+
+fetch('assets/photos/g75-pro-keys.json').then(r => r.json()).then(d => {
+  KEYS = d.keys;
+  build();
+});
+</script>
+</body>
+</html>
