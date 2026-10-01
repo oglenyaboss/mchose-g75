@@ -59,20 +59,15 @@
 }
 /* /OD-LAYOUT-PRIMITIVES v1 */
 
-/* Hallmark · macrostructure: Photographic · H6 photographic fold, captions in corners · nav: none · footer: Ft5 Statement
- * theme: custom (tokens.css) · genre: atmospheric · enrichment: Tier E — кадры three.js-сцены (Stills) + живой блок в iframe
- * pre-emit critique: P5 H4 E4 S5 R4 V5
- */
-
 /* Холст кейса — 1920 design px. Внутри слайда всё в calc(var(--u) * N), N в design px. */
 :root {
   --u: calc(100cqi / 1920);
   --pad: calc(var(--u) * 112);
   --gut: calc(var(--u) * 32);
-  --fs-head: calc(var(--u) * 60);
-  --fs-body: calc(var(--u) * 34);
-  --fs-cap: calc(var(--u) * 26);
-  --fs-mono: calc(var(--u) * 24);
+  --fs-head: calc(var(--u) * 80);
+  --fs-body: calc(var(--u) * 38);
+  --fs-cap: calc(var(--u) * 28);
+  --fs-mono: calc(var(--u) * 26);
   --dim-bar: color-mix(in oklch, var(--color-ink-2) 50%, transparent);
   /* включение кадра: доска проявляется тёмной, ставки загораются по порядку */
   --shot-reveal: 400ms;
@@ -84,6 +79,7 @@
 html, body { margin: 0; background: var(--color-paper); color: var(--color-ink); overflow-x: clip; }
 body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 * { box-sizing: border-box; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .case { container-type: inline-size; max-width: 1920px; margin-inline: auto; }
 
@@ -111,12 +107,12 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 .r6 { grid-column: span 6 / -2; }
 .end { align-self: end; }
 
-/* текст */
-.head { margin: 0; font: 700 var(--fs-head)/1.04 var(--font-display); font-stretch: 80%; letter-spacing: -0.01em; color: var(--color-ink); text-wrap: balance; }
-.h3 { margin: 0; font: 600 calc(var(--u) * 36)/1.25 var(--font-body); color: var(--color-ink); }
-.body { margin: 0; font: 400 var(--fs-body)/1.5 var(--font-body); color: var(--color-ink-2); text-wrap: pretty; }
+/* три голоса: заголовки и буквы модели — Science Gothic, рассказ — Source Serif 4, числа и байты — моно */
+.head { margin: 0; font: 700 var(--fs-head)/1 var(--font-display); font-stretch: 80%; letter-spacing: -0.01em; color: var(--color-ink); text-wrap: balance; }
+.h3 { margin: 0; font: 700 calc(var(--u) * 44)/1.1 var(--font-display); font-stretch: 80%; color: var(--color-ink); }
+.body { margin: 0; font: 400 var(--fs-body)/1.5 var(--font-body); font-variation-settings: "opsz" 24; color: var(--color-ink-2); text-wrap: pretty; }
 .body.dim { color: var(--color-muted); }
-.cap { margin: 0; font: 400 var(--fs-cap)/1.45 var(--font-body); color: var(--color-muted); text-wrap: pretty; }
+.cap { margin: 0; font: 400 var(--fs-cap)/1.45 var(--font-body); font-variation-settings: "opsz" 18; color: var(--color-muted); text-wrap: pretty; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .text { --od-gap: calc(var(--u) * 24); }
 
@@ -124,12 +120,21 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 .fitbox { display: block; }
 .fit { font-size: calc(var(--u) * var(--fs, 120)); }
 
-/* кадры сцены */
+/* строки шрифтом уверенности: титул и финальная фраза, ширина и вес каждой буквы — ставка модели */
+.ctype {
+  margin: 0; display: inline-grid; justify-items: start;
+  font-family: var(--font-display); font-weight: 800; font-stretch: 66%;
+  line-height: 0.9; letter-spacing: -0.01em; white-space: nowrap; color: var(--color-ink);
+}
+.ctype > .ln { display: block; }
+.ctype .cf > .g.sp { width: calc(0.1em + var(--t, 0.5) * 0.16em); }
+
+/* кадры сцены и таблички в углу кадра */
 .shot-fig { margin: 0; display: grid; gap: calc(var(--u) * 20); }
 .shot, .layer, .nogl { display: block; width: 100%; aspect-ratio: var(--ar, 16 / 9); }
 .shot { height: auto; background: var(--color-paper); opacity: 0; transition: opacity var(--shot-reveal) var(--ease-out); }
 .shot[data-rendered] { opacity: 1; }
-.shot-fig > canvas { grid-area: 1 / 1; }
+.shot-fig > canvas, .shot-fig > .nogl { grid-area: 1 / 1; }
 .layer {
   z-index: 1; height: auto; opacity: 0; pointer-events: none;
   transition: opacity var(--shot-fade) var(--ease-out) calc(var(--shot-lead) + var(--i, 0) * var(--shot-step));
@@ -143,6 +148,17 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 }
 .nogl-h { display: block; font: 600 calc(var(--u) * 40)/1.2 var(--font-body); color: var(--color-ink-2); }
 .shot[hidden], .nogl[hidden] { display: none; }
+.plate {
+  grid-area: 1 / 1; z-index: 2; align-self: end; justify-self: start;
+  margin: 0 0 calc(var(--u) * 32) var(--pad);
+  max-width: calc(var(--u) * 960);
+  padding: calc(var(--u) * 10) calc(var(--u) * 16);
+  border-radius: calc(var(--u) * 4);
+  background: var(--color-paper);
+  font: 400 calc(var(--u) * 22)/1.4 var(--font-mono);
+  color: var(--color-ink-2);
+}
+.shot-fig.r5 > .plate { margin: 0 0 calc(var(--u) * 24) calc(var(--u) * 24); }
 
 /* шрифт уверенности: строка букв, у каждой --t = p^0.4 (правила .cf/.g в tokens.css) */
 .glyphs { margin: 0; display: inline-flex; align-items: flex-start; line-height: 1; white-space: nowrap; }
@@ -151,60 +167,67 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 .glyphs .g.gap .ch { width: calc(0.22em + var(--t, 0.5) * 0.3em); }
 .glyphs .bar { display: block; height: calc(var(--u) * 8); border-radius: calc(var(--u) * 2); background: var(--k, var(--color-rule-2)); }
 .glyphs .g.nobet .bar { background: transparent; }
-.glyphs .pp { display: block; font: 400 calc(var(--u) * 22)/1 var(--font-mono); font-stretch: 100%; color: var(--color-muted); white-space: nowrap; }
+.glyphs .pp { display: block; font: 400 calc(var(--u) * 24)/1 var(--font-mono); font-stretch: 100%; color: var(--color-muted); white-space: nowrap; }
 
 /* 01 · титул */
-.s01 { --pt: calc(var(--u) * 104); --pb: calc(var(--u) * 96); --row: calc(var(--u) * 40); }
-.title {
-  margin: 0; display: inline-block; white-space: nowrap;
-  font: 800 1em/0.9 var(--font-display); font-stretch: 66%; letter-spacing: -0.02em;
-  font-size: calc(var(--u) * var(--fs, 200));
-}
-.lede { margin: 0; font: 400 calc(var(--u) * 42)/1.4 var(--font-body); color: var(--color-ink); text-wrap: pretty; }
+.s01 { --pt: calc(var(--u) * 104); --pb: 0px; --row: calc(var(--u) * 64); }
+.lede { margin: 0; font: 400 calc(var(--u) * 44)/1.4 var(--font-body); font-variation-settings: "opsz" 28; color: var(--color-ink); text-wrap: pretty; }
 
-/* 02 · фраза */
-.s02 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 128); --row: calc(var(--u) * 72); }
+/* 02 · фраза и ключ к ней */
+.s02 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 128); --row: calc(var(--u) * 80); }
 .specimen { margin: 0; display: flex; align-items: flex-end; gap: calc(var(--u) * 36); font-size: calc(var(--u) * 132); line-height: 1; }
 .specimen > .g { display: grid; justify-items: center; row-gap: calc(var(--u) * 14); }
 .specimen .ch { display: block; line-height: 0.9; }
-.specimen .pp { display: block; font: 400 calc(var(--u) * 22)/1 var(--font-mono); font-stretch: 100%; color: var(--color-muted); }
+.specimen .pp { display: block; font: 400 calc(var(--u) * 24)/1 var(--font-mono); font-stretch: 100%; color: var(--color-muted); }
+.keyset { --od-gap: calc(var(--u) * 24); }
+.key { list-style: none; margin: 0; padding: 0; display: grid; row-gap: calc(var(--u) * 16); }
+.key > li {
+  display: grid; grid-template-columns: calc(var(--u) * 64) minmax(0, 1fr); column-gap: calc(var(--u) * 20); align-items: center;
+  font: 400 var(--fs-cap)/1.3 var(--font-body); font-variation-settings: "opsz" 18; color: var(--color-ink-2);
+}
+.kb { display: block; height: calc(var(--u) * 8); border-radius: calc(var(--u) * 2); background: var(--k, var(--color-rule-2)); }
+.kb.none { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 2) var(--color-rule); }
 
 /* 03 · макро */
 .s03 { --pt: 0px; --pb: calc(var(--u) * 120); --row: calc(var(--u) * 56); }
 .bets { list-style: none; margin: 0; padding: 0; display: grid; row-gap: calc(var(--u) * 28); }
 .bet { display: grid; grid-template-columns: calc(var(--u) * 14) calc(var(--u) * 150) minmax(0, 1fr); column-gap: calc(var(--u) * 28); align-items: center; }
-.bet .sw { display: block; align-self: stretch; border-radius: calc(var(--u) * 3); background: var(--k); }
+.bet .sw { display: block; align-self: stretch; border-radius: calc(var(--u) * 2); background: var(--k); }
 .bet .big { font-size: calc(var(--u) * 128); line-height: 0.9; }
 .bet .big .ch { display: block; }
 .bet .meta { --od-gap: calc(var(--u) * 6); }
-.bet .rk { font: 600 calc(var(--u) * 30)/1.2 var(--font-body); color: var(--color-ink); }
-.bet .kv { font-size: calc(var(--u) * 26); line-height: 1.3; color: var(--color-muted); }
+.bet .rk { font: 700 calc(var(--u) * 32)/1.2 var(--font-display); font-stretch: 80%; color: var(--color-ink); }
+.bet .kv { font-size: var(--fs-mono); line-height: 1.3; color: var(--color-muted); }
 
 /* живой блок */
 .embed { display: block; }
 .embed iframe { display: block; width: 100%; height: max(56.25cqi, 820px); border: 0; background: var(--color-paper); }
 
 /* 04 · свет на колпачках */
-.s04 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 128); --row: calc(var(--u) * 48); }
-.pairs { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 24) calc(var(--u) * 72); }
-.pair { --od-gap: calc(var(--u) * 14); }
-.sws { display: flex; gap: calc(var(--u) * 12); }
-.swk { display: block; width: calc(var(--u) * 96); aspect-ratio: 1; border-radius: calc(var(--u) * 12); background: var(--k); }
-.pair .lab { font: 500 calc(var(--u) * 24)/1.3 var(--font-body); color: var(--color-ink-2); }
+.s04 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 128); --row: calc(var(--u) * 64); }
+.pairs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gut); row-gap: calc(var(--u) * 28); align-content: start; }
+.pairs > .cap { grid-column: 1 / -1; }
+.pair { --od-gap: calc(var(--u) * 20); }
+.pair .lab { font: 700 calc(var(--u) * 32)/1.2 var(--font-display); font-stretch: 80%; color: var(--color-ink); }
+.sws { display: flex; gap: calc(var(--u) * 16); }
+.swc { --od-gap: calc(var(--u) * 12); }
+.swk { display: block; width: calc(var(--u) * 168); aspect-ratio: 1; border-radius: calc(var(--u) * 12); background: var(--k); }
+.swc .pc { font: 400 var(--fs-mono)/1 var(--font-mono); color: var(--color-muted); }
 
 /* 05 · данные */
 .s05 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 48); }
 .nums { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--gut); }
 .nums > * { display: block; }
-.bignum { display: block; font: 800 calc(var(--u) * 176)/0.88 var(--font-display); font-stretch: 68%; letter-spacing: -0.02em; white-space: nowrap; color: var(--color-ink); }
+.bignum { display: block; font: 800 calc(var(--u) * 176)/0.88 var(--font-display); font-stretch: 66%; letter-spacing: -0.02em; white-space: nowrap; color: var(--color-ink); }
 .bignum.dim { font-weight: 250; color: var(--color-muted); }
 .nums .r { text-align: right; }
 .ticks { display: flex; align-items: stretch; gap: calc(var(--u) * 4); height: calc(var(--u) * 200); }
-.tick { display: block; flex: 1 1 0; border-radius: calc(var(--u) * 1); background: var(--color-rule); }
+.tick { display: block; flex: 1 1 0; background: var(--color-rule); }
 .tick.own { background: var(--color-ink); }
 .tick.part { flex-grow: 0.3; }
 .tlabels { display: flex; justify-content: space-between; gap: var(--gut); }
 .tlabels .r { text-align: right; }
+.mspec { margin: 0; font: 400 var(--fs-mono)/1.5 var(--font-mono); color: var(--color-ink-2); }
 
 /* 06 · сто нажатий */
 .s06 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 64); }
@@ -217,21 +240,23 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 .unit.u1 { background: var(--led-1); }
 .unit.u23 { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 4) var(--color-muted); }
 .legend { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 16) calc(var(--u) * 48); }
-.legend > span { display: flex; align-items: center; gap: calc(var(--u) * 14); font: 400 calc(var(--u) * 26)/1.3 var(--font-body); color: var(--color-ink-2); }
+.legend > span { display: flex; align-items: center; gap: calc(var(--u) * 14); font: 400 var(--fs-cap)/1.3 var(--font-body); font-variation-settings: "opsz" 18; color: var(--color-ink-2); }
 .legend .unit { width: calc(var(--u) * 28); }
 
 /* 07 · 401 ставка */
 .s07 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 120); --row: calc(var(--u) * 56); }
 .top3 { list-style: none; margin: 0; padding: 0; display: grid; row-gap: calc(var(--u) * 18); }
 .top3 li { display: grid; grid-template-columns: calc(var(--u) * 12) calc(var(--u) * 96) minmax(0, 1fr); column-gap: calc(var(--u) * 20); align-items: center; }
-.top3 .sw { display: block; align-self: stretch; border-radius: calc(var(--u) * 3); background: var(--k); }
+.top3 .sw { display: block; align-self: stretch; border-radius: calc(var(--u) * 2); background: var(--k); }
 .top3 .big { font-size: calc(var(--u) * 84); line-height: 0.9; }
 .top3 .big .ch { display: block; }
 .top3 .v { font-size: calc(var(--u) * 30); color: var(--color-ink); }
-.top3 .rest { grid-column: 2 / -1; font: 400 calc(var(--u) * 26)/1.4 var(--font-body); color: var(--color-muted); }
-.spectrum { display: flex; align-items: flex-end; gap: calc(var(--u) * 1); height: calc(var(--u) * 560); padding-inline: calc(var(--u) * 24); }
-.sb { display: block; flex: 1 1 0; height: calc(var(--h) * 100%); border-radius: calc(var(--u) * 1) calc(var(--u) * 1) 0 0; background: var(--dim-bar); }
+.top3 .rest { grid-column: 2 / -1; font: 400 var(--fs-cap)/1.4 var(--font-body); font-variation-settings: "opsz" 18; color: var(--color-muted); }
+.spectrum { position: relative; display: flex; align-items: flex-end; gap: calc(var(--u) * 1); height: calc(var(--u) * 560); padding-inline: calc(var(--u) * 24); }
+.sb { display: block; flex: 1 1 0; height: calc(var(--h) * 100%); background: var(--dim-bar); }
 .sb.lit { background: var(--k); }
+.thr { position: absolute; left: calc(var(--u) * 24); right: calc(var(--u) * 24); bottom: calc(var(--h) * 100%); border-top: calc(var(--u) * 2) dashed var(--color-muted); }
+.thr > span { position: absolute; right: 0; bottom: calc(var(--u) * 10); font: 400 calc(var(--u) * 24)/1 var(--font-mono); color: var(--color-ink-2); white-space: nowrap; }
 
 /* 08 · промах */
 .s08 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 64); }
@@ -245,11 +270,11 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 .bigtype .caret { grid-area: caret; display: block; width: 0.05em; height: 0.74em; margin: 0.06em 0.05em 0 0.03em; background: var(--color-ink); }
 .cands { grid-area: cands; list-style: none; margin: 0; padding: 0.04em 0 0; display: grid; row-gap: 0.08em; }
 .cand { display: grid; grid-template-columns: calc(var(--u) * 24) auto auto; column-gap: calc(var(--u) * 20); align-items: center; }
-.cand .sw { display: block; width: calc(var(--u) * 24); aspect-ratio: 1; border-radius: calc(var(--u) * 5); background: var(--k); }
+.cand .sw { display: block; width: calc(var(--u) * 24); aspect-ratio: 1; border-radius: calc(var(--u) * 4); background: var(--k); }
 .cand.off .sw { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 3) var(--color-muted); }
 .cand .cf { font-size: 0.5em; line-height: 0.9; }
 .cand .cf .ch { display: block; }
-.cand .lab { font: 500 calc(var(--u) * 24)/1.3 var(--font-mono); color: var(--color-muted); white-space: nowrap; }
+.cand .lab { font: 400 var(--fs-mono)/1.3 var(--font-mono); color: var(--color-muted); white-space: nowrap; }
 .cand.got .lab { color: var(--color-ink); }
 .cand .spg { display: block; width: 0.5em; height: 0.2em; margin-top: 0.4em; border: 0.05em solid currentColor; border-top: 0; }
 
@@ -258,46 +283,54 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 .dump {
   display: grid; grid-template-columns: calc(var(--u) * 64) repeat(14, minmax(0, 1fr));
   gap: calc(var(--u) * 8);
-  font: 400 calc(var(--u) * 19)/1 var(--font-mono);
+  font: 400 calc(var(--u) * 20)/1 var(--font-mono);
 }
 .dump > * { display: block; padding: calc(var(--u) * 9) calc(var(--u) * 4); border-radius: calc(var(--u) * 4); white-space: nowrap; text-align: center; }
 .dump .ix { padding-left: 0; text-align: left; color: var(--color-muted); }
 .dump .hd { grid-column: 2 / -1; text-align: left; color: var(--color-ink); font-weight: 600; }
+.dump .hd .hn { margin-left: calc(var(--u) * 32); font-weight: 400; color: var(--color-muted); }
 .dump .b { color: var(--color-ink-2); }
 .dump .z { color: var(--color-muted); font-weight: 300; }
 .dump .hot { background: var(--k); color: var(--on); font-weight: 700; }
+.dkey { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: calc(var(--u) * 16) calc(var(--u) * 48); }
+.dkey > li { display: flex; align-items: center; gap: calc(var(--u) * 16); font: 400 var(--fs-cap)/1.3 var(--font-body); font-variation-settings: "opsz" 18; color: var(--color-ink-2); }
+.dkey .dc { display: block; padding: calc(var(--u) * 9) calc(var(--u) * 12); border-radius: calc(var(--u) * 4); font: 400 calc(var(--u) * 20)/1 var(--font-mono); white-space: nowrap; color: var(--color-ink-2); box-shadow: inset 0 0 0 calc(var(--u) * 2) var(--color-rule-2); }
+.dkey .dc.z { color: var(--color-muted); font-weight: 300; }
+.dkey .dc.hot { background: var(--k); color: var(--on); font-weight: 700; box-shadow: none; }
 
-/* 10 · миллисекунды */
-.s10 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 56); }
-.lanes { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: var(--gut); row-gap: calc(var(--u) * 32); align-items: center; }
+/* 10 · от нажатия до света, одна шкала 0–40 мс */
+.s10 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 64); }
+.lanes { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: var(--gut); row-gap: calc(var(--u) * 28); align-items: center; }
 .lane-l { --od-gap: calc(var(--u) * 6); }
-.lane-l .v { font: 700 calc(var(--u) * 56)/1 var(--font-display); font-stretch: 72%; color: var(--color-ink); }
-.lane-l .n { font: 400 calc(var(--u) * 26)/1.35 var(--font-body); color: var(--color-muted); }
+.lane-l .v { font: 700 calc(var(--u) * 56)/1 var(--font-display); font-stretch: 66%; color: var(--color-ink); white-space: nowrap; }
+.lane-l .n { font: 400 var(--fs-cap)/1.35 var(--font-body); font-variation-settings: "opsz" 18; color: var(--color-muted); }
+.lane-l.dim .v { font-weight: 300; color: var(--color-muted); }
 .lane-b {
-  display: block; height: calc(var(--u) * 64);
+  display: flex; align-items: stretch; height: calc(var(--u) * 64);
   background: repeating-linear-gradient(90deg, var(--color-rule-2) 0 calc(var(--u) * 2), transparent calc(var(--u) * 2) 25%);
 }
-.lane-b .fill { display: block; height: 100%; width: calc(var(--v) / 40 * 100%); border-radius: calc(var(--u) * 4); background: var(--color-ink); }
-.lane-b .fill.soft { background: var(--color-ink-2); }
-.lane-b .fill.send { background: var(--color-muted); }
+.lane-b .fill { flex: none; display: block; margin-left: calc(var(--s, 0) / 40 * 100%); width: calc(var(--v) / 40 * 100%); border-radius: calc(var(--u) * 4); background: var(--color-ink); }
+.lane-b .fill.send { background: var(--color-ink-2); }
+.lane-b .fill.soft { background: var(--color-muted); }
 .lane-b .fill.budget { background: transparent; box-shadow: inset 0 0 0 calc(var(--u) * 3) var(--color-muted); }
-.axis { grid-column: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 0; font: 500 calc(var(--u) * 24)/1 var(--font-mono); color: var(--color-muted); }
+.lane-b .lit { flex: none; display: flex; align-items: center; gap: calc(var(--u) * 8); margin-left: calc(var(--s) / 40 * 100%); padding-left: calc(var(--u) * 12); border-left: calc(var(--u) * 3) solid var(--color-ink); }
+.lane-b .lit > i { display: block; width: calc(var(--u) * 28); aspect-ratio: 1; border-radius: calc(var(--u) * 4); background: var(--k); }
+.axis { grid-column: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 0; font: 400 var(--fs-mono)/1 var(--font-mono); color: var(--color-muted); }
 .axis > span { display: block; white-space: nowrap; transform: translateX(-50%); }
 .axis > span:first-child { transform: none; }
 .axis > span:last-child { transform: translateX(-100%); }
-.chain { margin: 0; font: 500 calc(var(--u) * 30)/1.6 var(--font-mono); color: var(--color-ink-2); text-wrap: balance; }
 
 /* 11 · коллектор и события */
 .s11 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 136); --row: calc(var(--u) * 72); }
-.events { border-collapse: collapse; width: 100%; font: 500 calc(var(--u) * 28)/1.2 var(--font-mono); color: var(--color-ink); }
-.events th { padding: 0 calc(var(--u) * 24) calc(var(--u) * 18) 0; text-align: left; font: 500 calc(var(--u) * 22)/1.3 var(--font-body); color: var(--color-muted); }
+.events { border-collapse: collapse; width: 100%; font: 400 calc(var(--u) * 28)/1.2 var(--font-mono); color: var(--color-ink); }
+.events th { padding: 0 calc(var(--u) * 24) calc(var(--u) * 18) 0; text-align: left; font: 400 calc(var(--u) * 24)/1.3 var(--font-body); color: var(--color-muted); }
 .events td { padding: calc(var(--u) * 10) calc(var(--u) * 24) calc(var(--u) * 10) 0; white-space: nowrap; vertical-align: middle; }
 .events .ctx { color: var(--color-muted); }
 .events caption { caption-side: bottom; text-align: left; padding-top: calc(var(--u) * 24); }
 .chips { display: flex; gap: calc(var(--u) * 8); }
 .chip { display: grid; place-items: center; width: calc(var(--u) * 52); height: calc(var(--u) * 52); border-radius: calc(var(--u) * 8); background: var(--k); color: var(--on); font-weight: 700; }
 .chip .spc { display: block; width: 50%; height: 24%; border: calc(var(--u) * 3) solid currentColor; border-top: 0; }
-.events .res { font: 400 calc(var(--u) * 26)/1.2 var(--font-body); color: var(--color-ink-2); }
+.events .res { font: 400 var(--fs-cap)/1.2 var(--font-body); color: var(--color-ink-2); }
 .events .res.miss { color: var(--color-muted); }
 
 /* 12 · финал */
@@ -306,7 +339,6 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
 /* 13 · стенд, 14 · финальная фраза */
 .s13 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 72); --row: calc(var(--u) * 48); }
 .s14 { --pt: calc(var(--u) * 144); --pb: calc(var(--u) * 112); }
-.statement { margin: 0; font: 700 calc(var(--u) * 128)/0.96 var(--font-display); font-stretch: 70%; letter-spacing: -0.015em; color: var(--color-ink); text-wrap: balance; }
 .meta-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: calc(var(--u) * 16) var(--gut); }
 .meta-row > * { display: block; }
 </style>
@@ -319,29 +351,36 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
   <!-- 01 · титул -->
   <section class="slide s01" aria-labelledby="t01">
     <div class="main fitbox">
-      <h1 class="title fit" id="t01" data-max="320">Меня можно<br>предсказать на&nbsp;95%</h1>
+      <h1 class="ctype fit" id="t01" data-max="320"><span class="vh">Меня можно предсказать на&nbsp;95%</span><span class="ln" aria-hidden="true">Меня можно</span><span class="ln" aria-hidden="true">предсказать</span><span class="ln" aria-hidden="true">на&nbsp;95%</span></h1>
     </div>
+    <p class="lede l7">Клавиатура подсвечивает три клавиши, которые я, скорее всего, нажму следующими. Ставки делает маленькая языковая модель, которую я&nbsp;обучил на&nbsp;своей переписке. В&nbsp;95,5% случаев следующая буква среди трёх горящих.</p>
+    <p class="cap r4 end">Ширина и&nbsp;вес каждой буквы заголовка показывают ставку модели на&nbsp;неё. Цифр «95» модель не&nbsp;ждала.</p>
     <figure class="shot-fig full" style="--ar: 1920 / 860">
       <canvas class="shot" data-shot="hero" data-lit="main" role="img" aria-label="Рендер клавиатуры MCHOSE G75 Pro: после «Привет, как д» горят T, J и E"></canvas>
       <p class="nogl" hidden></p>
+      <figcaption class="plate">Рендер в&nbsp;браузере. MCHOSE G75 Pro, stone black. Набрано «Привет, как&nbsp;д», горят T, J и&nbsp;E</figcaption>
     </figure>
-    <p class="lede l7">Клавиатура подсвечивает три клавиши, которые я, скорее всего, нажму следующими. Ставки делает маленькая языковая модель, обученная на&nbsp;моей переписке. В&nbsp;95,5% случаев следующая буква оказывается среди трёх горящих.</p>
-    <p class="cap r4 end">Рендер в&nbsp;браузере. MCHOSE G75 Pro в&nbsp;расцветке stone black. Набрано «Привет, как&nbsp;д», горят T, J и&nbsp;E.</p>
   </section>
 
   <!-- 02 · фраза шрифтом уверенности -->
   <section class="slide s02" aria-labelledby="t02">
-    <h2 class="head l8" id="t02">Каждая буква набрана по&nbsp;ставке, которую на&nbsp;неё сделала модель</h2>
+    <h2 class="head l8" id="t02">Чем увереннее ставка, тем шире и&nbsp;жирнее буква</h2>
     <div class="main fitbox">
       <p class="cf glyphs fit" id="phrase" data-max="300" role="img" aria-label="«Привет, как дела», каждая буква набрана по ставке модели. Большинство букв получили больше 50%, несколько больше 98%. Самые неожиданные: «к» после «Привет, » около 5% и запятая 12%."></p>
     </div>
-    <div class="l6 od-stack text">
-      <p class="body">Чем больше модель ставила на&nbsp;букву, тем она шире и&nbsp;жирнее. Низкая ставка даёт узкую и&nbsp;тонкую букву. Ширина и&nbsp;вес растут как p в&nbsp;степени 0,4, по&nbsp;той&nbsp;же кривой, что яркость клавиши.</p>
-      <p class="body dim">Полоска под буквой показывает свет. Зелёная значит, что буква горела первой ставкой, янтарная значит вторую ставку, голубая третью. Тёмная полоска значит, что буква не&nbsp;горела.</p>
-    </div>
-    <div class="r5 end od-stack text">
+    <div class="l6 od-stack keyset">
       <p class="cf specimen" id="specimen" aria-hidden="true"></p>
-      <p class="cap">Буква «о» при ставке 1%, 5%, 20%, 50% и&nbsp;100%. Ниже реальный прогон: у&nbsp;первой буквы сообщения ставки нет.</p>
+      <p class="cap">Одна и&nbsp;та&nbsp;же «о» при ставке от&nbsp;1% до&nbsp;100%. Ширина и&nbsp;вес растут как p в&nbsp;степени 0,4, по&nbsp;той&nbsp;же кривой, что яркость клавиши.</p>
+    </div>
+    <div class="r5 end od-stack keyset">
+      <p class="cap">Полоска под буквой показывает свет</p>
+      <ul class="key">
+        <li><span class="kb" style="--k: var(--led-1)"></span>буква горела первой ставкой</li>
+        <li><span class="kb" style="--k: var(--led-2)"></span>второй ставкой</li>
+        <li><span class="kb" style="--k: var(--led-3)"></span>третьей ставкой</li>
+        <li><span class="kb"></span>не&nbsp;горела</li>
+        <li><span class="kb none"></span>первая буква сообщения, ставки нет</li>
+      </ul>
     </div>
   </section>
 
@@ -350,11 +389,11 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     <figure class="shot-fig full" style="--ar: 1920 / 1040">
       <canvas class="shot" data-shot="macro" data-lit="main" role="img" aria-label="Макро-рендер: горят T зелёным, J янтарным и E голубым"></canvas>
       <p class="nogl" hidden></p>
+      <figcaption class="plate">Рендер, макро. Фокус на&nbsp;T</figcaption>
     </figure>
     <div class="l5 od-stack text">
       <h2 class="head" id="t03">Кириллицы на&nbsp;клавишах нет</h2>
-      <p class="body">Модель ставит на&nbsp;«е», а&nbsp;загорается T: в&nbsp;раскладке ЙЦУКЕН «е» стоит на&nbsp;T. Пробел зажигает пробел. Перенос строки и&nbsp;знаки без своей клавиши пропускаются, и&nbsp;свет достаётся следующей ставке.</p>
-      <p class="cap">Рендер, макро. Фокус на&nbsp;T.</p>
+      <p class="body">Модель ставит на&nbsp;«е», а&nbsp;загорается T, потому что в&nbsp;раскладке ЙЦУКЕН «е» стоит на&nbsp;T. Если у&nbsp;знака нет своей клавиши, как у&nbsp;переноса строки, свет уходит следующей ставке.</p>
     </div>
     <ol class="bets r6 end" id="bets" aria-label="Три ставки после «Привет, как д»"></ol>
   </section>
@@ -365,16 +404,16 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     <figure class="shot-fig full" style="--ar: 1920 / 900">
       <canvas class="shot" data-shot="ramp" data-lit="ramp" role="img" aria-label="Рендер трёх буквенных рядов: верхний горит зелёным, средний янтарным, нижний голубым, яркость растёт слева направо"></canvas>
       <p class="nogl" hidden></p>
+      <figcaption class="plate">Рендер. Сверху вниз первая, вторая и&nbsp;третья ставки. Слева направо ставка растёт от&nbsp;0,5% до&nbsp;100%</figcaption>
     </figure>
-    <p class="cap l5">Рендер. Верхний ряд горит как первая ставка, средний как вторая, нижний как третья. Слева направо ставка растёт: 0,5%, 2%, 5%, 10%, 20%, 30%, 45%, 60%, 80%, 100%.</p>
-    <div class="r6 od-stack text">
-      <p class="body">Первая версия красила клавишу по&nbsp;уверенности: синий значил «гадаю», белый значил «знаю». Вторая и&nbsp;третья ставки обычно близки по&nbsp;вероятности, и&nbsp;в&nbsp;79% случаев им доставался один оттенок.</p>
-      <p class="body">Теперь у&nbsp;каждого места свой цвет, а&nbsp;яркость растёт как p в&nbsp;степени 0,4. Ставка на&nbsp;46% светит на&nbsp;73%, ставка на&nbsp;6% на&nbsp;33%, и&nbsp;слабая ставка не&nbsp;гаснет совсем.</p>
-      <div class="pairs" role="img" aria-label="Вторая и третья ставки после «Привет, как д»: в старой схеме два почти одинаковых синих, в новой янтарный и голубой">
-        <div class="pair od-stack"><div class="sws" id="was"></div><span class="lab">Было</span></div>
-        <div class="pair od-stack"><div class="sws" id="now"></div><span class="lab">Стало</span></div>
-      </div>
-      <p class="cap">Вторая и&nbsp;третья ставки после «Привет, как&nbsp;д», 9,3% и&nbsp;6,7%.</p>
+    <div class="l6 pairs" role="img" aria-label="Вторая и третья ставки после «Привет, как д», 9,3% и 6,7%: в старой схеме два почти одинаковых синих, в новой янтарный и голубой">
+      <div class="pair od-stack"><span class="lab">Было: цвет по&nbsp;уверенности</span><div class="sws" id="was"></div></div>
+      <div class="pair od-stack"><span class="lab">Стало: цвет по&nbsp;месту</span><div class="sws" id="now"></div></div>
+      <p class="cap">Вторая и&nbsp;третья ставки после «Привет, как&nbsp;д».</p>
+    </div>
+    <div class="r5 od-stack text">
+      <p class="body">Первая версия красила клавишу по&nbsp;уверенности, от&nbsp;синего «гадаю» до&nbsp;белого «знаю». Вторая и&nbsp;третья ставки почти всегда близки, и&nbsp;в&nbsp;79% случаев им доставался один оттенок.</p>
+      <p class="body">Теперь у&nbsp;каждого места свой цвет. Яркость растёт как p в&nbsp;степени 0,4, поэтому слабая ставка не&nbsp;гаснет: ставка 6% светит на&nbsp;треть.</p>
     </div>
   </section>
 
@@ -396,18 +435,21 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
       <h3 class="h3">Общие тексты</h3>
       <p class="body">Детские рассказы TinyStories, английская и&nbsp;русская Википедия. На&nbsp;них модель учится языку вообще. 14&nbsp;минут на&nbsp;ноутбуке.</p>
     </div>
-    <div class="r6 od-stack text">
+    <div class="r5 od-stack text">
       <h3 class="h3">Моя переписка</h3>
-      <p class="body">Мои сообщения из&nbsp;экспорта Телеграма, только мои, по&nbsp;строке на&nbsp;сообщение. Серии из&nbsp;двух и&nbsp;больше цифр заменены на&nbsp;&lt;num&gt;. 26&nbsp;минут дообучения, 8000 шагов.</p>
+      <p class="body">Только мои сообщения из&nbsp;экспорта Телеграма, по&nbsp;строке на&nbsp;сообщение. Числа из&nbsp;двух и&nbsp;больше цифр я&nbsp;заменил на&nbsp;&lt;num&gt;. 26&nbsp;минут дообучения, 8000 шагов.</p>
     </div>
-    <p class="cap l8">Модель маленькая: 3,4&nbsp;млн параметров, 4&nbsp;слоя, контекст 256&nbsp;знаков, словарь 401&nbsp;знак, включая заглавные и&nbsp;эмодзи. Последний 1% переписки, 53&nbsp;тысячи символов, модель не&nbsp;видела. Вся точность дальше посчитана на&nbsp;нём.</p>
+    <div class="main od-stack" style="--od-gap: calc(var(--u) * 16)">
+      <p class="mspec">3,4&nbsp;млн параметров · 4&nbsp;слоя · окно 256&nbsp;знаков · словарь 401&nbsp;знак с&nbsp;заглавными и&nbsp;эмодзи</p>
+      <p class="cap">Последний 1% переписки, 53&nbsp;тысячи символов, модель не&nbsp;видела. На&nbsp;нём я&nbsp;и&nbsp;считал всю точность дальше.</p>
+    </div>
   </section>
 
   <!-- 06 · сто нажатий -->
   <section class="slide s06" aria-labelledby="t06">
     <div class="l7 od-stack text">
       <h2 class="head" id="t06">Зелёная клавиша права в&nbsp;9&nbsp;случаях из&nbsp;10</h2>
-      <p class="body">Простая статистика по&nbsp;трём предыдущим буквам уже попадает в&nbsp;тройку в&nbsp;91,6% случаев. Модель поднимает тройку до&nbsp;95,5%. Условием приёмки было плюс 3&nbsp;пункта, вышло 3,9. Главный выигрыш у&nbsp;первой ставки: 90,1% вместо 70,2%.</p>
+      <p class="body">Простая статистика по&nbsp;трём предыдущим буквам, без нейросети, угадывает первой ставкой 70&nbsp;нажатий из&nbsp;100. Модель угадывает&nbsp;90.</p>
     </div>
     <div class="l5 ucol od-stack">
       <span class="unum dim">70</span>
@@ -431,7 +473,7 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
         <span><i class="unit u23"></i>вторая или третья</span>
         <span><i class="unit"></i>мимо тройки</span>
       </div>
-      <p class="cap">100 нажатий на&nbsp;отложенной переписке, доли округлены до&nbsp;целых. Первая версия модели со&nbsp;словарём 136 знаков давала 77,7% и&nbsp;94,8%.</p>
+      <p class="cap">100 нажатий на&nbsp;отложенной переписке, доли округлены до&nbsp;целых. Условием приёмки было обогнать статистику в&nbsp;тройке на&nbsp;3&nbsp;пункта, вышло 3,9. Первая версия модели со&nbsp;словарём 136 знаков угадывала первой ставкой 77,7%, в&nbsp;тройке 94,8%.</p>
     </div>
   </section>
 
@@ -439,11 +481,11 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
   <section class="slide s07" aria-labelledby="t07">
     <div class="l6 od-stack text">
       <h2 class="head" id="t07">На&nbsp;каждую букву 401&nbsp;ставка. Горят три</h2>
-      <p class="body">После «Привет, как&nbsp;д» три лидера забирают 91,8%. Выше 1% всего пять знаков, выше 0,1% одиннадцать, остальные 390 ниже.</p>
+      <p class="body">После «Привет, как&nbsp;д» три лидера забирают 91,8%.</p>
     </div>
     <ul class="top3 r4 end" id="top3" aria-label="Три горящие ставки"></ul>
-    <div class="full spectrum" id="spectrum" role="img" aria-label="401 столбик по убыванию ставки. Три горящих: е 75,9%, о 9,3%, у 6,7%. Дальше длинный низкий хвост."></div>
-    <p class="cap l8">Все знаки словаря по&nbsp;убыванию ставки после «Привет, как&nbsp;д». Высота столбика равна яркости, которую получила&nbsp;бы клавиша.</p>
+    <div class="full spectrum" id="spectrum" role="img" aria-label="401 столбик по убыванию ставки. Три горящих: е 75,9%, о 9,3%, у 6,7%. Выше 1% пять знаков, выше 0,1% одиннадцать, дальше длинный низкий хвост."></div>
+    <p class="cap l8">Все знаки словаря по&nbsp;убыванию ставки. Высота столбика равна яркости, которую получила&nbsp;бы клавиша.</p>
   </section>
 
   <!-- 08 · промах -->
@@ -460,13 +502,13 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     <figure class="shot-fig r5" style="--ar: 5 / 4">
       <canvas class="shot" data-shot="miss" data-lit="miss" role="img" aria-label="Рендер: горят J, T и B, клавиша F нажата"></canvas>
       <p class="nogl" hidden></p>
-      <figcaption class="cap">Рендер. Горят J, T и&nbsp;B. Нажата F, на&nbsp;ней «а».</figcaption>
+      <figcaption class="plate">Рендер. Горят J, T и&nbsp;B. Нажата F, на&nbsp;ней «а»</figcaption>
     </figure>
     <div class="l6 od-stack text">
       <p class="body">В&nbsp;моей переписке «хорошо» встречается 2218 раз, «хорошая» 78 раз, «хорошая погода» трижды. Модель выучила именно это.</p>
     </div>
     <div class="r5 od-stack text">
-      <p class="body dim">«А» оказалась четвёртой ставкой с&nbsp;2,7% и&nbsp;не&nbsp;загорелась. Модель ставит на&nbsp;то, что чаще встречалось в&nbsp;моих сообщениях. Знать, что я&nbsp;напишу дальше, модель не&nbsp;может.</p>
+      <p class="body dim">«А» оказалась четвёртой ставкой с&nbsp;2,7% и&nbsp;не&nbsp;загорелась. Модель ставит на&nbsp;то, что чаще встречалось в&nbsp;моих сообщениях. Знать, что я&nbsp;напишу дальше, она не&nbsp;может.</p>
     </div>
   </section>
 
@@ -474,43 +516,46 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
   <section class="slide s09" aria-labelledby="t09">
     <div class="l6 od-stack text">
       <h2 class="head" id="t09">Кадр света занимает 385&nbsp;байт</h2>
-      <p class="body">Протокол нашёлся в&nbsp;исходниках официального веб-драйвера, снифер не&nbsp;понадобился.</p>
-      <p class="body">Канал 0x06 перекрашивает клавиши, но&nbsp;во&nbsp;время печати каждая запись добавляет плавающую задержку. Её&nbsp;чувствуют пальцы, а&nbsp;счётчики не&nbsp;видят.</p>
+      <p class="body">Протокол нашёлся в&nbsp;исходниках официального веб-драйвера, снифер не&nbsp;понадобился. Канал 0x06 перекрашивает клавиши, но&nbsp;во&nbsp;время печати каждая запись добавляет плавающую задержку. Её&nbsp;чувствуют пальцы, а&nbsp;счётчики не&nbsp;видят.</p>
     </div>
     <div class="r5 end od-stack text">
-      <p class="body">Канал 0x08 драйвер использует для эквалайзера под музыку. Кадр ложится в&nbsp;отдельный буфер, и&nbsp;опрос клавиш его не&nbsp;ждёт. 25&nbsp;кадров в&nbsp;секунду, отправка около 12&nbsp;мс.</p>
+      <p class="body">Канал 0x08 драйвер использует для эквалайзера под музыку. Кадр ложится в&nbsp;отдельный буфер, и&nbsp;опрос клавиш его не&nbsp;ждёт.</p>
     </div>
-    <div class="main dump" id="dump" role="img" aria-label="Байты кадра 0x08 для «Привет, как д»: заголовок 08 00 00 01 00 7A 01 и 126 троек RGB. Горят ячейки 20, 32 и 45."></div>
-    <p class="cap l8">Кадр для «Привет, как&nbsp;д». Заголовок 08 00 00 01 00 7A 01, дальше 126 ячеек по&nbsp;R, G и&nbsp;B. 06 05 09 это фон, 00 00 00 запас прошивки, клавиш там нет. До&nbsp;519 байт отчёт добивается нулями. Горят ячейки 20, 32 и&nbsp;45, это клавиши E, T и&nbsp;J.</p>
+    <div class="main dump" id="dump" role="img" aria-label="Байты кадра 0x08 для «Привет, как д»: заголовок 08 00 00 01 00 7A 01 и 126 троек RGB. Горят ячейки 20, 32 и 45, это клавиши E, T и J."></div>
+    <div class="main od-stack" style="--od-gap: calc(var(--u) * 24)">
+      <ul class="dkey" id="dumpKey" aria-hidden="true"></ul>
+      <p class="cap">Кадр для «Привет, как&nbsp;д». До&nbsp;519 байт отчёт добивается нулями.</p>
+    </div>
   </section>
 
-  <!-- 10 · одно нажатие на шкале мс -->
+  <!-- 10 · от нажатия до света на шкале мс -->
   <section class="slide s10" aria-labelledby="t10">
     <div class="l7 od-stack text">
-      <h2 class="head" id="t10">Между нажатием и&nbsp;светом</h2>
-      <p class="body">Нажатие перехватывает keytap на&nbsp;Swift раньше приложения. Node-процесс берёт последние 256 знаков, прогоняет модель и&nbsp;собирает кадр из&nbsp;трёх ставок. Модель и&nbsp;свет живут в&nbsp;одном процессе, Python нужен только для обучения.</p>
+      <h2 class="head" id="t10">Между нажатием и&nbsp;светом около 21&nbsp;мс</h2>
+      <p class="body">Нажатие перехватывает keytap на&nbsp;Swift раньше приложения. Node-процесс берёт последние 256 знаков, прогоняет модель и&nbsp;собирает кадр из&nbsp;трёх ставок. Python нужен только для обучения.</p>
     </div>
-    <div class="main lanes" role="img" aria-label="Шкала от 0 до 40 мс. Модель на окне 256 знаков 8,8 мс, на окне 64 знака 2,4 мс. Отправка кадра около 12 мс. Между кадрами 40 мс.">
-      <div class="lane-l od-stack"><span class="v mono">8,8&nbsp;мс</span><span class="n">модель, окно 256 знаков</span></div>
-      <div class="lane-b"><span class="fill" style="--v: 8.8"></span></div>
-      <div class="lane-l od-stack"><span class="v mono">2,4&nbsp;мс</span><span class="n">модель, окно 64 знака</span></div>
-      <div class="lane-b"><span class="fill soft" style="--v: 2.4"></span></div>
-      <div class="lane-l od-stack"><span class="v mono">≈12&nbsp;мс</span><span class="n">отправка кадра по&nbsp;USB</span></div>
-      <div class="lane-b"><span class="fill send" style="--v: 12"></span></div>
-      <div class="lane-l od-stack"><span class="v mono">40&nbsp;мс</span><span class="n">между кадрами, 25 в&nbsp;секунду</span></div>
-      <div class="lane-b"><span class="fill budget" style="--v: 40"></span></div>
+    <div class="main lanes" role="img" aria-label="Шкала от 0 до 40 мс. Модель на окне 256 знаков считает 8,8 мс. Сразу после неё кадр уходит по USB, около 12 мс. Свет загорается примерно через 21 мс после нажатия. Следующий кадр уходит не раньше чем через 40 мс. На окне 64 знака модель считает 2,4 мс.">
+      <div class="lane-l od-stack"><span class="v">8,8&nbsp;мс</span><span class="n">модель, окно 256 знаков</span></div>
+      <div class="lane-b"><span class="fill" style="--s: 0; --v: 8.8"></span></div>
+      <div class="lane-l od-stack"><span class="v">~12&nbsp;мс</span><span class="n">кадр 0x08 уходит по&nbsp;USB</span></div>
+      <div class="lane-b"><span class="fill send" style="--s: 8.8; --v: 12"></span></div>
+      <div class="lane-l od-stack"><span class="v">~21&nbsp;мс</span><span class="n">свет на&nbsp;клавишах, сумма двух замеров выше</span></div>
+      <div class="lane-b"><span class="lit" style="--s: 20.8"><i style="--k: var(--led-1)"></i><i style="--k: var(--led-2)"></i><i style="--k: var(--led-3)"></i></span></div>
+      <div class="lane-l od-stack"><span class="v">40&nbsp;мс</span><span class="n">между кадрами, 25 в&nbsp;секунду</span></div>
+      <div class="lane-b"><span class="fill budget" style="--s: 0; --v: 40"></span></div>
+      <div class="lane-l od-stack dim"><span class="v">2,4&nbsp;мс</span><span class="n">та&nbsp;же модель на&nbsp;окне 64 знака</span></div>
+      <div class="lane-b"><span class="fill soft" style="--s: 0; --v: 2.4"></span></div>
       <div class="axis" aria-hidden="true"><span>0</span><span>10</span><span>20</span><span>30</span><span>40&nbsp;мс</span></div>
     </div>
-    <p class="chain main">нажатие · keytap · 256 знаков · sft.onnx · три ставки · кадр 0x08 · свет</p>
-    <p class="cap l8">Bluetooth не&nbsp;подходит: пока клавиатура подключена к&nbsp;маку по&nbsp;Bluetooth, macOS держит её&nbsp;сама и&nbsp;сторонний процесс к&nbsp;ней не&nbsp;пускает. Свет работает по&nbsp;проводу и&nbsp;через донгл 2,4&nbsp;ГГц.</p>
+    <p class="cap l8">keytap и&nbsp;прошивку я&nbsp;не&nbsp;замерял, на&nbsp;шкале их&nbsp;нет. Bluetooth не&nbsp;подходит: пока клавиатура подключена к&nbsp;маку по&nbsp;Bluetooth, macOS держит её&nbsp;сама и&nbsp;сторонний процесс к&nbsp;ней не&nbsp;пускает. Свет работает по&nbsp;проводу и&nbsp;через донгл 2,4&nbsp;ГГц.</p>
   </section>
 
   <!-- 11 · коллектор и следующий шаг -->
   <section class="slide s11" aria-labelledby="t11">
     <div class="l5 od-stack text">
       <h2 class="head" id="t11">Дальше модель будет учиться на&nbsp;нажатиях</h2>
-      <p class="body">Каждое нажатие уже оценка. Клавиатура подсветила три клавиши, и&nbsp;нажата одна из&nbsp;них или&nbsp;другая. Из&nbsp;таких событий соберётся дообучение с&nbsp;подкреплением, пачками, а&nbsp;не&nbsp;на&nbsp;каждое нажатие.</p>
-      <p class="body dim">95,5% посчитаны на&nbsp;отложенной переписке. Точность на&nbsp;живой печати с&nbsp;новой моделью ещё предстоит перемерить.</p>
+      <p class="body">Каждое нажатие уже оценка. Клавиатура подсветила три клавиши, и&nbsp;я&nbsp;нажал одну из&nbsp;них или&nbsp;другую. Из&nbsp;таких событий соберётся дообучение с&nbsp;подкреплением, пачками, а&nbsp;не&nbsp;на&nbsp;каждое нажатие.</p>
+      <p class="body dim">95,5% посчитаны на&nbsp;отложенной переписке. Точность на&nbsp;живой печати с&nbsp;новой моделью я&nbsp;ещё не&nbsp;перемерил.</p>
     </div>
     <div class="r6 od-stack" style="--od-gap: calc(var(--u) * 24)">
       <table class="events" id="events">
@@ -521,7 +566,7 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     </div>
     <div class="l8 od-stack text">
       <h3 class="h3">Отдельно пишутся все нажатия</h3>
-      <p class="body">Это кейлоггер, и&nbsp;я&nbsp;обращаюсь с&nbsp;ним как с&nbsp;кейлоггером. Демон под launchd пишет лог только на&nbsp;ноутбук, доступ к&nbsp;файлу есть только у&nbsp;меня. Серии из&nbsp;двух и&nbsp;больше цифр заменяются на&nbsp;&lt;num&gt;, сочетания с&nbsp;Cmd и&nbsp;Ctrl не&nbsp;пишутся, запись ставится на&nbsp;паузу по&nbsp;⌃⌥K. Часть полей с&nbsp;паролями macOS закрывает от&nbsp;перехвата сама.</p>
+      <p class="body">Это кейлоггер, и&nbsp;я&nbsp;обращаюсь с&nbsp;ним как с&nbsp;кейлоггером. Демон под launchd пишет лог только на&nbsp;ноутбук, и&nbsp;читать файл могу только я. Числа из&nbsp;двух и&nbsp;больше цифр он заменяет на&nbsp;&lt;num&gt;, сочетания с&nbsp;Cmd и&nbsp;Ctrl не&nbsp;пишет, по&nbsp;<span class="mono">⌃⌥K</span> встаёт на&nbsp;паузу. Часть полей с&nbsp;паролями macOS закрывает от&nbsp;перехвата сама.</p>
     </div>
   </section>
 
@@ -530,6 +575,7 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     <figure class="shot-fig full" style="--ar: 1920 / 820">
       <canvas class="shot" data-shot="end" data-lit="spasibo" role="img" aria-label="Рендер всей клавиатуры с низкого ракурса: горят 1, пробел и 0"></canvas>
       <p class="nogl" hidden></p>
+      <figcaption class="plate">Рендер с&nbsp;низкого ракурса. «!» на&nbsp;клавише 1, «)» на&nbsp;клавише 0</figcaption>
     </figure>
     <div class="l7 fitbox">
       <div class="bigtype fit" id="endType" data-max="280" role="img" aria-label="Набрано «Спасибо». Ставки: перенос строки 48,8%, восклицательный знак 23,0%, пробел 19,1%, скобка 3,5%.">
@@ -542,7 +588,6 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     <div class="r5 end od-stack text">
       <h2 class="head" id="t12">48,8% на&nbsp;конец сообщения</h2>
       <p class="body">После «Спасибо» модель ставит 48,8% на&nbsp;перенос строки, то&nbsp;есть на&nbsp;конец сообщения. Переноса на&nbsp;клавиатуре нет, поэтому горят «!», пробел и&nbsp;скобка.</p>
-      <p class="cap">Рендер. «!» на&nbsp;клавише 1, «)» на&nbsp;клавише 0.</p>
     </div>
   </section>
 
@@ -550,9 +595,9 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
   <section class="slide s13" aria-labelledby="t13">
     <div class="l7 od-stack text">
       <h2 class="head" id="t13">Теперь печатаешь ты</h2>
-      <p class="body">Ниже работает та&nbsp;же модель, что зажигает клавиатуру, только прямо в&nbsp;браузере. Её&nbsp;учили на&nbsp;моей переписке, и&nbsp;ставит она на&nbsp;то, что написал&nbsp;бы&nbsp;я.</p>
+      <p class="body">Ниже работает та&nbsp;же модель, что зажигает клавиатуру, только в&nbsp;браузере. Её&nbsp;учили на&nbsp;моей переписке, и&nbsp;ставит она на&nbsp;то, что написал&nbsp;бы&nbsp;я.</p>
     </div>
-    <p class="cap r4 end">При первом запуске браузер скачает около 24&nbsp;МБ: модель и&nbsp;движок для&nbsp;неё. Окно здесь 64&nbsp;знака вместо 256, по&nbsp;замеру точность та&nbsp;же.</p>
+    <p class="cap r4 end">При первом запуске браузер скачает около 24&nbsp;МБ, модель и&nbsp;движок для&nbsp;неё. Окно здесь 64&nbsp;знака вместо 256, точность по&nbsp;замеру та&nbsp;же.</p>
   </section>
 
   <!-- живой блок: свой iframe внутри кейса -->
@@ -560,10 +605,12 @@ body { font-family: var(--font-body); -webkit-font-smoothing: antialiased; text-
     <iframe src="stand.html" title="Живой блок: напиши фразу, и клавиатура подсветит три ставки модели" loading="lazy"></iframe>
   </section>
 
-  <!-- 14 · финальная фраза -->
+  <!-- 14 · финальная фраза: начало повторяет титул буква в букву -->
   <footer class="slide s14">
-    <div class="main od-stack" style="--od-gap: calc(var(--u) * 48)">
-      <p class="statement">Меня можно предсказать, потому что я&nbsp;повторяюсь.</p>
+    <div class="main od-stack" style="--od-gap: calc(var(--u) * 64)">
+      <div class="fitbox">
+        <p class="ctype fit" id="statement" data-max-from="t01"><span class="vh">Меня можно предсказать, потому что я&nbsp;повторяюсь.</span><span class="ln" aria-hidden="true">Меня можно</span><span class="ln" aria-hidden="true">предсказать,</span><span class="ln" aria-hidden="true">потому что я</span><span class="ln" aria-hidden="true">повторяюсь.</span></p>
+      </div>
       <div class="meta-row">
         <span class="body">Один человек на&nbsp;весь цикл: реверс протокола, сбор данных, обучение, инференс, свет и&nbsp;этот кейс.</span>
         <span class="cap mono">Swift · node-hid · PyTorch · ONNX · launchd</span>
@@ -601,6 +648,18 @@ const lum = hex => {
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 };
 const onColor = hex => lum(hex) > 0.19 ? "var(--color-paper)" : "var(--color-ink)";
+const plural = (n, forms) => forms[n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2];
+
+// Титул и финальная фраза: прямой прогон sft.onnx через onnxruntime-node, контекст — только набранное начало.
+// ap[i] — ставка модели на букву i; у первой буквы ставки нет. Начало у фраз общее, поэтому и ставки совпадают.
+const TITLE = {
+  text: "Меня можно предсказать на 95%",
+  ap: [null, 0.0986, 0.646, 0.899, 0.905, 0.0268, 0.221, 0.331, 0.39, 0.995, 0.881, 0.17, 0.333, 0.0446, 0.716, 0.205, 0.00891, 0.821, 0.843, 0.688, 0.997, 0.994, 0.544, 0.112, 0.598, 0.653, 0.000887, 0.0000331, 0.0138],
+};
+const STATEMENT = {
+  text: "Меня можно предсказать, потому что я повторяюсь.",
+  ap: [null, 0.0986, 0.646, 0.899, 0.905, 0.0268, 0.221, 0.331, 0.39, 0.995, 0.881, 0.17, 0.333, 0.0446, 0.716, 0.205, 0.00891, 0.821, 0.843, 0.688, 0.997, 0.994, 0.0649, 0.999, 0.12, 0.737, 0.185, 0.918, 0.991, 0.483, 0.993, 0.998, 0.996, 0.999, 0.916, 0.149, 0.993, 0.161, 0.557, 0.00536, 0.0606, 0.982, 0.996, 0.141, 0.721, 0.0814, 0.993, 0.0184],
+};
 
 // «Спасибо»: прямой прогон sft.onnx. Ставка на каждую букву и четыре лидера после слова; цвета по FAMILY из candle.cjs
 const SPASIBO = {
@@ -621,7 +680,7 @@ function glyph(ch, p, { bar, label } = {}) {
   if (p == null) g.classList.add("nobet");
   else g.style.setProperty("--t", tOf(p));
   if (ch === " ") g.classList.add("gap");
-  g.append(el("span", "ch", ch === " " ? " " : ch));
+  g.append(el("span", "ch", ch === " " ? " " : ch));
   if (bar !== undefined) {
     const b = el("span", "bar");
     if (bar) b.style.setProperty("--k", bar);
@@ -630,6 +689,29 @@ function glyph(ch, p, { bar, label } = {}) {
   if (label !== undefined) g.append(el("span", "pp", label));
   return g;
 }
+
+// строки .ln внутри .ctype: каждая строка забирает свои буквы из прогона, пробел между строками пропускается
+function confLines(node, run) {
+  const chars = [...run.text];
+  let i = 0;
+  node.querySelectorAll(".ln").forEach(ln => {
+    if (chars[i] === " ") i++;
+    const n = [...ln.textContent].length;
+    const out = [];
+    for (let j = i; j < i + n; j++) {
+      const g = el("span", "g", chars[j] === " " ? null : chars[j]);
+      if (run.ap[j] == null) g.classList.add("nobet");
+      else g.style.setProperty("--t", tOf(run.ap[j]));
+      if (chars[j] === " ") g.classList.add("sp");
+      out.push(g);
+    }
+    ln.classList.add("cf");
+    ln.replaceChildren(...out);
+    i += n;
+  });
+}
+confLines($("t01"), TITLE);
+confLines($("statement"), STATEMENT);
 
 // буквы фразы из записанного прогона: ставка на букву i лежит в шаге i − 1
 function phraseGlyphs(ph, from, to, { bars = false, labels = false } = {}) {
@@ -680,10 +762,16 @@ const grad = (stops, t) => {
 };
 const hex = c => "#" + c.map(v => Math.round(Math.min(255, v)).toString(16).padStart(2, "0")).join("");
 const oldColor = (p, r) => hex(grad(CONF, Math.sqrt(p)).map(v => v * RANK[r]));
-const swk = k => { const s = el("span", "swk"); s.style.setProperty("--k", k); return s; };
+const swk = (k, p) => {
+  const cell = el("span", "swc od-stack");
+  const s = el("span", "swk");
+  s.style.setProperty("--k", k);
+  cell.append(s, el("span", "pc", pc1(p)));
+  return cell;
+};
 const [, b2, b3] = D.snap.main.lit;
-$("was").append(swk(oldColor(b2.p, 1)), swk(oldColor(b3.p, 2)));
-$("now").append(swk(b2.c), swk(b3.c));
+$("was").append(swk(oldColor(b2.p, 1), b2.p), swk(oldColor(b3.p, 2), b3.p));
+$("now").append(swk(b2.c, b2.p), swk(b3.c, b3.p));
 
 // 05 · штрих = миллион символов
 for (let i = 0; i < 163; i++) $("ticks").append(el("span", "tick"));
@@ -695,7 +783,7 @@ const units = (host, a, b) => { for (let i = 0; i < 100; i++) host.append(el("sp
 units($("unitsStat"), 70, 21);
 units($("unitsModel"), 90, 5);
 
-// 07 · спектр и три лидера
+// 07 · спектр, пороги 1% и 0,1% и три лидера
 const litMain = new Map(D.snap.main.lit.map(c => [c.ch, c.c]));
 D.snap.main.sorted.forEach(([ch, p]) => {
   const b = el("span", "sb");
@@ -703,6 +791,13 @@ D.snap.main.sorted.forEach(([ch, p]) => {
   const k = litMain.get(ch);
   if (k) { b.classList.add("lit"); b.style.setProperty("--k", k); }
   $("spectrum").append(b);
+});
+[[0.01, "1%"], [0.001, "0,1%"]].forEach(([t, label]) => {
+  const n = D.snap.main.sorted.filter(([, p]) => p > t).length;
+  const line = el("span", "thr");
+  line.style.setProperty("--h", Math.pow(t, 0.4).toFixed(4));
+  line.append(el("span", "", `${n} ${plural(n, ["знак", "знака", "знаков"])} выше ${label}`));
+  $("spectrum").append(line);
 });
 D.snap.main.lit.forEach(c => {
   const li = el("li");
@@ -745,21 +840,33 @@ SPASIBO.next.forEach(c => $("endCands").append(cand(c, c.ch === "\n"
 // 09 · байты кадра, как их собирает candle.cjs: фон 06 05 09 для слотов < 96, свет поверх
 const hot = new Map(D.snap.main.lit.map(c => [c.s, c.c]));
 const hx = n => n.toString(16).toUpperCase().padStart(2, "0");
+const rgb = k => [1, 3, 5].map(i => k.slice(i, i + 2).toUpperCase()).join(" ");
 const dump = $("dump");
 const byte = (cls, text, k) => {
   const s = el("span", cls, text);
   if (k) { s.style.setProperty("--k", k); s.style.setProperty("--on", onColor(k)); }
   dump.append(s);
+  return s;
 };
 byte("ix", "hdr");
-byte("hd", [8, 0, 0, 1, 0, 0x7a, 1].map(hx).join(" "));
+byte("hd", [8, 0, 0, 1, 0, 0x7a, 1].map(hx).join(" ")).append(el("span", "hn", "заголовок: канал 0x08, 0x7A = 126 ячеек"));
 for (let s = 0; s < 126; s++) {
   if (s % 14 === 0) byte("ix", String(s).padStart(3, "0"));
   const k = hot.get(s);
-  if (k) byte("b hot", [1, 3, 5].map(i => k.slice(i, i + 2).toUpperCase()).join(" "), k);
+  if (k) byte("b hot", rgb(k), k);
   else if (s < 96) byte("b", "06 05 09");
   else byte("z", "00 00 00");
 }
+const dkey = (cls, text, label, k) => {
+  const li = el("li");
+  const chip = el("span", "dc " + cls, text);
+  if (k) { chip.style.setProperty("--k", k); chip.style.setProperty("--on", onColor(k)); }
+  li.append(chip, el("span", "", label));
+  $("dumpKey").append(li);
+};
+D.snap.main.lit.forEach(c => dkey("hot", rgb(c.c), `ячейка ${c.s}, клавиша ${keyName(c.s)}`, c.c));
+dkey("b", "06 05 09", "фон, клавиша не горит");
+dkey("z", "00 00 00", "запас прошивки, клавиш там нет");
 
 // 11 · события из записанного прогона
 const P5 = D.phrases[5];
@@ -783,10 +890,13 @@ const P5 = D.phrases[5];
   $("eventsBody").append(tr);
 });
 
-// подгонка крупных строк по ширине колонки: размер в design px, поэтому масштаб окна на неё не влияет
+// подгонка крупных строк по ширине колонки: размер в design px, поэтому масштаб окна на неё не влияет.
+// data-max-from — потолок берётся у другой строки: финальная фраза не крупнее титула, и общее начало совпадает с ним размер в размер
 function fit(node) {
   const box = node.parentElement;
-  const max = Number(node.dataset.max) || 300;
+  const max = node.dataset.maxFrom
+    ? parseFloat($(node.dataset.maxFrom).style.getPropertyValue("--fs")) || 300
+    : Number(node.dataset.max) || 300;
   let fs = 100;
   for (let i = 0; i < 3; i++) {
     node.style.setProperty("--fs", fs.toFixed(2));
@@ -905,8 +1015,9 @@ async function renders() {
 renders();
 
 await Promise.all([
-  document.fonts.load('800 100px "Science Gothic"', "Привет, как дела 95%"),
+  document.fonts.load('800 100px "Science Gothic"', "Меня можно предсказать на 95% Привет, как дела"),
   document.fonts.load('400 20px "Geist Mono"', "0123%"),
+  document.fonts.load('400 38px "Source Serif 4"', "Клавиатура"),
 ]).catch(() => {});
 await document.fonts.ready;
 fitAll();

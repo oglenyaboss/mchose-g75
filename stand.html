@@ -59,9 +59,6 @@
 }
 /* /OD-LAYOUT-PRIMITIVES v1 */
 
-/* Hallmark · macrostructure: Photographic · live fold: the keyboard is the photograph, UI is annotation
- * theme: custom (tokens.css) · genre: atmospheric · states: default · hover · focus · active · disabled · loading · error · success */
-
 html, body { margin: 0; background: var(--color-paper); color: var(--color-ink); overflow-x: clip; }
 body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: antialiased; }
 * { box-sizing: border-box; }
@@ -110,6 +107,7 @@ body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: an
   cursor: pointer;
   transition: border-color var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
 }
+.chip { font-family: var(--font-mono); font-weight: 400; }
 .link { border-color: transparent; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; color: var(--color-ink-2); }
 .chip:active, .link:active { transform: translateY(1px); }
 .chip:focus-visible, .link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
@@ -145,7 +143,7 @@ body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: an
 .bet .dot { grid-row: 1 / 4; width: 10px; align-self: stretch; border-radius: 2px; background: var(--k); }
 .bet .glyph { font-size: 56px; line-height: 1; min-height: 56px; }
 .bet .glyph .g.space { display: inline-block; width: 0.8em; height: 0.28em; border: 0.08em solid currentColor; border-top: 0; }
-.bet .key { font-size: var(--text-xs); color: var(--color-muted); white-space: nowrap; }
+.bet .key { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-muted); white-space: nowrap; }
 .bet .pc { font: 500 var(--text-md)/1 var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bets .empty { grid-column: 1 / -1; color: var(--color-muted); font-size: var(--text-sm); align-self: center; }
 
@@ -155,7 +153,7 @@ body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: an
 
 .status { --od-gap: var(--space-2xs); min-width: 200px; text-align: right; }
 .status .st { font: 500 var(--text-sm)/1.4 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--color-ink-2); white-space: nowrap; }
-.status .sub { font-size: var(--text-xs); color: var(--color-muted); }
+.status .sub { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-muted); }
 .status progress { appearance: none; -webkit-appearance: none; width: 100%; height: 2px; border: 0; background: var(--color-rule); }
 .status progress::-webkit-progress-bar { background: var(--color-rule); }
 .status progress::-webkit-progress-value { background: var(--color-ink); }
@@ -211,7 +209,7 @@ body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: an
   <figure class="stage">
     <canvas id="board" tabindex="0" aria-label="3D-клавиатура MCHOSE G75 Pro. Потяни, чтобы повернуть"></canvas>
     <p class="fail" id="boardFail" hidden></p>
-    <figcaption>Рендер в браузере по геометрии клавиш из драйвера. Цвет и яркость — тот же кадр, что уходит в клавиатуру.</figcaption>
+    <figcaption>Рендер в браузере по геометрии клавиш из драйвера. Цвет и яркость берутся из того же кадра, что уходит в клавиатуру.</figcaption>
   </figure>
 
   <div class="bottom">
@@ -220,7 +218,7 @@ body { font: 400 var(--text-md)/1.5 var(--font-body); -webkit-font-smoothing: an
     </ol>
     <div class="spec od-stack">
       <canvas id="spec" role="img" aria-label="Все 401 ставка модели по убыванию"></canvas>
-      <span class="lab" id="specLab">Все 401 ставка по убыванию. Высота — яркость, которую получила бы клавиша</span>
+      <span class="lab" id="specLab">Все 401 ставка по убыванию. Высота столбика равна яркости, которую получила бы клавиша</span>
     </div>
     <div class="status od-stack" role="status">
       <span class="st" id="st">Загружаю модель</span>
@@ -254,7 +252,7 @@ try {
   $("board").hidden = true;
   const f = $("boardFail");
   f.hidden = false;
-  f.textContent = "3D не запустился: " + (e && e.message ? e.message : e) + ". Включи аппаратное ускорение в браузере — ставки ниже работают и без него.";
+  f.textContent = "3D не запустился: " + (e && e.message ? e.message : e) + ". Включи аппаратное ускорение в браузере. Ставки ниже работают и без него.";
 }
 
 // ---- модель ----
